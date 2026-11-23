@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tómbola Navideña 2026</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#10251e;color:#fff;font-family:Arial,sans-serif;padding:20px}
+.container{max-width:850px;margin:auto}
+header{text-align:center;padding:25px}
+h1{color:#e8c36a;font-size:35px;margin:8px}
+.subtitle{color:#c8d7ce}
+.card{background:#19392e;padding:22px;border-radius:16px;margin:18px 0;border:1px solid #45634f}
+h2{color:#e8c36a}
+button,select,textarea{font:inherit;border-radius:9px;padding:12px;border:0}
+button{cursor:pointer;font-weight:bold;background:#d7ad51;color:#19251c}
+button:disabled{opacity:.4;cursor:not-allowed}
+textarea{width:100%;min-height:130px;background:#10251e;color:white;border:1px solid #587363}
+select{background:#10251e;color:white;border:1px solid #587363;max-width:100%}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.tabs{display:flex;gap:10px;flex-wrap:wrap}
+.tab{background:#294d3c;color:white}
+.tab.active{background:#d7ad51;color:#19251c}
+.wheel{width:260px;height:260px;border-radius:50%;margin:20px auto;background:repeating-conic-gradient(#b52f38 0deg 30deg,#e4bd61 30deg 60deg,#17603d 60deg 90deg);border:9px solid #e5c36b;display:grid;place-items:center;transition:transform 2.5s cubic-bezier(.15,.75,.2,1);font-size:48px}
+.result{text-align:center;font-size:30px;color:#f4d47d;font-weight:bold;overflow-wrap:anywhere;margin:20px 0}
+.muted{color:#bdcfc3;font-size:14px}
+.row{padding:10px;border-bottom:1px solid #45634f;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hidden{display:none}
+footer{text-align:center;color:#9db4a4;padding:25px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+<div style="font-size:45px">🎄🎅🎄</div>
+<h1>TÓMBOLA NAVIDEÑA</h1>
+<p class="subtitle">Edición 2026 · La magia está en el azar</p>
+</header>
+
+<div class="card">
+<h2>🎁 Selecciona la modalidad</h2>
+<div class="tabs">
+<button class="tab active" onclick="mode('tombola',this)">🎡 Tómbola</button>
+<button class="tab" onclick="mode('secret',this)">🎁 Amigo secreto</button>
+</div>
+</div>
+
+<div class="card">
+<h2>👥 Participantes</h2>
+<p class="muted">Escribe un nombre por línea.</p>
+<textarea id="input" placeholder="César&#10;María&#10;Carlos&#10;Ana"></textarea>
+<div class="actions">
+<button onclick="loadNames()">Cargar participantes</button>
+<button onclick="clearInput()">Limpiar</button>
+</div>
+<p id="status" class="muted">Esperando participantes...</p>
+<div id="participants"></div>
+</div>
+
+<div id="tombola">
+<div class="card">
+<h2>🎡 ¡Hora del sorteo!</h2>
+
+<p>¿Quién va a girar la tómbola?</p>
+<select id="spinner"></select>
+
+<div class="wheel" id="wheel">🎄</div>
+
+<div class="result" id="result">¡Mucha suerte!</div>
+
+<button id="spin" onclick="spin()" style="width:100%">GIRAR LA TÓMBOLA</button>
+
+<p class="muted" id="remaining"></p>
+</div>
+</div>
+
+<div id="secret" class="hidden">
+<div class="card">
+<h2>🎁 Amigo secreto</h2>
+<p class="muted">Cada participante recibirá una persona diferente. Nadie se asignará a sí mismo.</p>
+<button onclick="assign()">REALIZAR ASIGNACIÓN</button>
+<div id="assignments"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>📜 Historial de resultados</h2>
+<div id="history">Sin resultados todavía.</div>
+</div>
+
+<div class="actions">
+<button onclick="resetAll()">↻ Reiniciar sorteo</button>
+</div>
+
+<footer>✨ Una Navidad llena de sorpresas ✨</footer>
+</div>
+
+<script>
+let names=[];
+let remaining=[];
+let history=[];
+let currentMode='tombola';
+let busy=false;
+let secretPairs=null;
+
+function save(){
+localStorage.setItem('tombola2026',JSON.stringify({
+names,remaining,history,currentMode,secretPairs
+}));
+}
+
+function mode(m,btn){
+currentMode=m;
+document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+document.getElementById('tombola').classList.toggle('hidden',m!=='tombola');
+document.getElementById('secret').classList.toggle('hidden',m!=='secret');
+save();
+}
+
+function loadNames(){
+let list=document.getElementById('input').value.split('\n').map(x=>x.trim()).filter(Boolean);
+if(list.length<2)return alert('Agrega al menos dos participantes.');
+if(new Set(list.map(x=>x.toLowerCase())).size!==list.length)return alert('Hay nombres repetidos.');
+names=list;
+remaining=[...list];
+history=[];
+secretPairs=null;
+document.getElementById('assignments').innerHTML='';
+document.getElementById('result').textContent='¡Participantes listos!';
+render();
+save();
+}
+
+function clearInput(){
+document.getElementById('input').value='';
+}
+
+function render(){
+let box=document.getElementById('participants');
+box.innerHTML='';
+names.forEach(n=>{
+let p=document.createElement('p');
+p.textContent=(remaining.includes(n)?'🟢 ':'⚪ ')+n;
+box.appendChild(p);
+});
+
+let select=document.getElementById('spinner');
+let old=select.value;
+select.innerHTML='';
+names.forEach(n=>{
+let o=document.createElement('option');
+o.value=n;
+o.textContent=n;
+select.appendChild(o);
+});
+if(names.includes(old))select.value=old;
+
+document.getElementById('remaining').textContent=
+remaining.length+' participantes pendientes de salir';
+
+document.getElementById('spin').disabled=busy||remaining.length===0;
+
+let h=document.getElementById('history');
+h.innerHTML='';
+if(!history.length)h.textContent='Sin resultados todavía.';
+history.forEach((item,i)=>{
+let p=document.createElement('div');
+p.className='row';
+p.textContent=(i+1)+'. '+item;
+h.appendChild(p);
+});
+}
+
+function spin(){
+if(busy||remaining.length===0)return;
+let spinner=document.getElementById('spinner').value;
+let available=remaining.filter(n=>n!==spinner);
+if(!available.length)return alert('No hay otro participante disponible para salir.');
+
+let winner=available[Math.floor(Math.random()*available.length)];
+busy=true;
+document.getElementById('spin').disabled=true;
+document.getElementById('result').textContent='🎄 LA SUERTE ESTÁ DECIDIENDO...';
+
+let wheel=document.getElementById('wheel');
+wheel.style.transition='none';
+wheel.style.transform='rotate(0deg)';
+void wheel.offsetWidth;
+wheel.style.transition='transform 3s cubic-bezier(.15,.75,.2,1)';
+wheel.style.transform='rotate(1800deg)';
+
+setTimeout(()=>{
+remaining=remaining.filter(n=>n!==winner);
+history.push('🎡 '+spinner+' giró → '+winner+' salió seleccionado');
+document.getElementById('result').textContent='🎉 '+winner+' 🎉';
+busy=false;
+render();
+save();
+},3100);
+}
+
+function assign(){
+if(names.length<2)return alert('Primero carga los participantes.');
+if(secretPairs)return alert('Ya existe una asignación. Reinicia para generar otra.');
+
+let shuffled=[...names];
+do{
+for(let i=shuffled.length-1;i>0;i--){
+let j=Math.floor(Math.random()*(i+1));
+[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+}
+}while(shuffled.some((n,i)=>n===names[i]));
+
+secretPairs=names.map((n,i)=>({giver:n,receiver:shuffled[i],shown:false}));
+let box=document.getElementById('assignments');
+box.innerHTML='<p>Las asignaciones están listas. Cada participante debe revelar únicamente su resultado.</p>';
+
+secretPairs.forEach(pair=>{
+let row=document.createElement('div');
+row.className='row';
+let label=document.createElement('span');
+label.textContent=pair.giver;
+let btn=document.createElement('button');
+btn.textContent='Revelar 🎁';
+btn.onclick=()=>{
+if(pair.shown)return;
+pair.shown=true;
+btn.textContent='Regala a: '+pair.receiver;
+btn.disabled=true;
+history.push('🎁 '+pair.giver+' → '+pair.receiver);
+save();
+render();
+};
+row.append(label,btn);
+box.appendChild(row);
+});
+history.push('🎁 Se generó una asignación de amigo secreto.');
+render();
+save();
+}
+
+function resetAll(){
+if(!confirm('¿Seguro que quieres reiniciar todo el sorteo?'))return;
+remaining=[...names];
+history=[];
+secretPairs=null;
+busy=false;
+document.getElementById('result').textContent='¡Mucha suerte!';
+document.getElementById('assignments').innerHTML='';
+render();
+save();
+}
+
+function restore(){
+try{
+let data=JSON.parse(localStorage.getItem('tombola2026'));
+if(data){
+names=data.names||[];
+remaining=data.remaining||[...names];
+history=data.history||[];
+currentMode=data.currentMode||'tombola';
+secretPairs=data.secretPairs||null;
+}
+}catch(e){}
+render();
+if(secretPairs){
+document.getElementById('assignments').innerHTML=
+'<p>La asignación ya fue generada. Por seguridad, vuelve a iniciar el sorteo si necesitas mostrar los resultados individualmente.</p>';
+}
+}
+restore();
+</script>
+</body>
+</html>
