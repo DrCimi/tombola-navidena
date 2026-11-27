@@ -6,6 +6,15 @@
 <title>Jingle Bell · Intercambio navideño</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@font-face{
+  font-family:'AustralianMiragesCustom';
+  src:url('AustralianMirages.ttf') format('truetype');
+  font-weight:normal;
+  font-style:normal;
+  font-display:swap;
+}
+
 :root{
   --pine:#123d32;
   --pine2:#1c604b;
@@ -43,8 +52,8 @@ main{
 .panel{
   position:relative;
   background:rgba(16, 54, 82, 0.76) !important;
-  color:#f4f9fc;
-  border:3px solid #f0c66c;
+  color:var(--ink);
+  border:3px solid var(--gold);
   border-radius:28px;
   padding:clamp(18px,4vw,30px);
   box-shadow:0 20px 46px rgba(4,20,15,0.55),inset 0 1px rgba(255,255,255,0.24);
@@ -300,7 +309,7 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 <main>
  <section class="panel">
   <header class="hero-in-panel">
-   <> Intercambio Navideño  </h1>
+   <h1>✦ 🎄 Jingle Bell Gift Exchange 🎄 ✦</h1>
    <p class="subtitle">¡Que la magia navideña decida tu regalo!</p>
   </header>
 
@@ -345,7 +354,7 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
  </section>
 </main>
 
-<!-- Reproductor de música opcional: reemplaza el src por un enlace directo a tu MP3 navideño -->
+<!-- Reproductor de música opcional: reemplaza el src por el nombre de tu MP3 en el repo (ej. navidad.mp3) -->
 <div class="audio-control">
  <button type="button" class="audio-btn" id="toggleMusic">🎵 Música</button>
  <audio id="bgMusic" loop preload="none">
