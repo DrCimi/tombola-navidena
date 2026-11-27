@@ -160,62 +160,76 @@ select:disabled{opacity:.65}
   line-height:1.1;
   margin-top:2px;
 }
-.wheel-wrap{
+
+/* Formato de tómbola con bolitas */
+.tombola-wrap{
   display:grid;
   place-items:center;
   position:relative;
   margin:14px auto 16px;
-  width:min(76vw,330px);
-  height:min(76vw,330px);
+  width:min(78vw,340px);
+  height:min(78vw,340px);
 }
-.pointer{
+.tombola-chute{
   position:absolute;
-  top:-10px;
-  z-index:3;
-  color:var(--gold);
-  font-size:38px;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+  top:-14px;
+  z-index:4;
+  background:linear-gradient(180deg,#d8e8f5,#9fb8ce);
+  color:#143044;
+  border:3px solid rgba(255,255,255,0.85);
+  border-radius:14px;
+  padding:3px 12px;
+  font-size:0.75rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  box-shadow:0 6px 14px rgba(0,0,0,0.35);
 }
-.wheel{
+.tombola-dome{
+  position:relative;
   width:100%;
   height:100%;
   border-radius:50%;
-  border:9px solid rgba(226, 238, 248, 0.88);
-  outline:4px solid rgba(176, 196, 214, 0.7);
-  box-shadow:0 12px 28px rgba(4,20,15,0.45), inset 0 0 24px rgba(210, 235, 255, 0.35);
-  display:grid;
-  place-items:center;
-  background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.25), rgba(16,54,82,0.55));
-  transition:transform 4s cubic-bezier(.12,.75,.15,1);
-  position:relative;
+  border:9px solid rgba(220, 236, 248, 0.85);
+  outline:4px solid rgba(145, 174, 198, 0.65);
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.36) 0%, rgba(168, 206, 232, 0.22) 38%, rgba(18, 52, 78, 0.72) 100%);
+  box-shadow:
+    0 14px 30px rgba(4,20,15,0.5),
+    inset 0 0 28px rgba(215, 238, 255, 0.32),
+    inset 0 -18px 26px rgba(8, 26, 40, 0.45);
+  overflow:hidden;
 }
-.wheel:after{
+.tombola-dome:before{
   content:"";
   position:absolute;
-  inset:10px;
-  border:1px dashed rgba(244, 249, 252, 0.75);
+  top:10%;
+  left:14%;
+  width:42%;
+  height:24%;
   border-radius:50%;
+  background:linear-gradient(180deg, rgba(255,255,255,0.42), rgba(255,255,255,0));
+  transform:rotate(-24deg);
   pointer-events:none;
+  z-index:3;
 }
-.wheel svg{width:100%;height:100%;display:block;overflow:visible}
-.wheel-label{
-  font-family:"Plus Jakarta Sans",Arial,sans-serif;
-  font-size:10.5px;
-  font-weight:800;
-  fill:#fffdf2;
-  text-anchor:middle;
-  dominant-baseline:middle;
-  paint-order:stroke;
-  stroke:#183b2b;
-  stroke-width:2.3px;
-  stroke-linejoin:round;
+#tombolaCanvas{
+  width:100%;
+  height:100%;
+  display:block;
 }
-.wheel-center{
-  fill:rgba(225, 239, 248, 0.92);
-  stroke:#8fa8be;
-  stroke-width:4;
+.tombola-base{
+  position:absolute;
+  bottom:-10px;
+  width:64%;
+  height:18px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#7c96ad,#c6d9e8,#7c96ad);
+  border:2px solid rgba(255,255,255,0.6);
+  box-shadow:0 6px 14px rgba(0,0,0,0.45);
+  z-index:3;
 }
-.wheel-center-text{font-size:25px;text-anchor:middle;dominant-baseline:middle}
+
 .result{
   text-align:center;
   min-height:104px;
@@ -336,11 +350,12 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
    </div>
   </div>
 
-  <div class="wheel-wrap">
-   <div class="pointer">▼</div>
-   <div class="wheel" id="wheel">
-    <svg id="wheelNames" viewBox="0 0 400 400" role="img" aria-label="Ruleta con los nombres de los participantes"></svg>
+  <div class="tombola-wrap">
+   <div class="tombola-chute">▼ TÓMBOLA ▼</div>
+   <div class="tombola-dome">
+    <canvas id="tombolaCanvas" width="340" height="340" role="img" aria-label="Tómbola con bolitas de participantes"></canvas>
    </div>
+   <div class="tombola-base"></div>
   </div>
 
   <div class="result" id="result">
@@ -349,7 +364,7 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 
   <div class="bottom-bar">
    <div class="info-side" id="leftHint">Sin autoregalos ni mismo grupo.</div>
-   <button class="primary" id="spin" disabled>🎡 Girar la ruleta</button>
+   <button class="primary" id="spin" disabled>🎡 Girar la tómbola</button>
    <div class="info-side right" id="rightHint">Registro en tiempo real.</div>
   </div>
 
@@ -374,6 +389,11 @@ let people = [];
 let state = { done: [] };
 let spinning = false;
 let apiReady = false;
+
+/* Estado de bolitas de la tómbola */
+let balls = [];
+let highlightedIndex = null;
+let animFrameId = null;
 
 const bgAudio = document.getElementById("bgMusic");
 const musicBtn = document.getElementById("toggleMusic");
@@ -437,19 +457,150 @@ function apiCall(params){
   });
 }
 
-function renderWheelNames(){
-  const svg=document.getElementById("wheelNames"),cx=200,cy=200,r=190,inner=43;
-  const palette=["#2d5a6b","#3d5e52","#7c454e","#8f7a4a"],slice=360/people.length,parts=[];
-  for(let i=0;i<people.length;i++){
-    const start=(-90+i*slice)*Math.PI/180,end=(-90+(i+1)*slice)*Math.PI/180;
-    const x1=cx+r*Math.cos(start),y1=cy+r*Math.sin(start),x2=cx+r*Math.cos(end),y2=cy+r*Math.sin(end);
-    const ix1=cx+inner*Math.cos(start),iy1=cy+inner*Math.sin(start),ix2=cx+inner*Math.cos(end),iy2=cy+inner*Math.sin(end);
-    parts.push(`<path d="M ${ix1.toFixed(2)} ${iy1.toFixed(2)} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${inner} ${inner} 0 0 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z" fill="${palette[i%palette.length]}" stroke="#eef6fb" stroke-width="1.4"/>`);
-    const mid=(-90+(i+.5)*slice)*Math.PI/180,tx=cx+124*Math.cos(mid),ty=cy+124*Math.sin(mid),rotation=-90+(i+.5)*slice+90;
-    parts.push(`<text class="wheel-label" x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" transform="rotate(${rotation.toFixed(2)} ${tx.toFixed(2)} ${ty.toFixed(2)})">${esc(people[i][0])}</text>`);
+/* Colores suaves y mate para las bolitas de la tómbola */
+const ballPalette = [
+  "#6e9cb5",
+  "#789e8c",
+  "#b57b84",
+  "#bfa46b",
+  "#8799b8",
+  "#94ab85"
+];
+
+function createTombolaBalls(){
+  const canvas = document.getElementById("tombolaCanvas");
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const arenaRadius = canvas.width / 2 - 22;
+  const ballRadius = people.length > 26 ? 15 : 18;
+
+  balls = people.map((person, idx) => {
+    const angle = (idx / Math.max(people.length, 1)) * Math.PI * 2;
+    const dist = ((idx % 4) + 1) * (arenaRadius * 0.16);
+    const speed = 1.15 + (idx % 3) * 0.35;
+    const dir = angle + 0.8;
+    return {
+      index: idx,
+      label: String(person[0] || "").slice(0, 6),
+      x: cx + Math.cos(angle) * Math.min(dist, arenaRadius - ballRadius - 4),
+      y: cy + Math.sin(angle) * Math.min(dist, arenaRadius - ballRadius - 4),
+      vx: Math.cos(dir) * speed,
+      vy: Math.sin(dir) * speed,
+      r: ballRadius,
+      color: ballPalette[idx % ballPalette.length]
+    };
+  });
+
+  if(!animFrameId){
+    stepTombola();
   }
-  parts.push('<circle class="wheel-center" cx="200" cy="200" r="42"/><text class="wheel-center-text" x="200" y="201">🎁</text>');
-  svg.innerHTML=parts.join("");
+}
+
+function stepTombola(){
+  const canvas = document.getElementById("tombolaCanvas");
+  const ctx = canvas.getContext("2d");
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const arenaRadius = canvas.width / 2 - 12;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const boost = spinning ? 4.4 : 1;
+
+  for(let i = 0; i < balls.length; i++){
+    const b = balls[i];
+    b.x += b.vx * boost;
+    b.y += b.vy * boost;
+
+    if(spinning && Math.random() < 0.08){
+      b.vy -= 1.35;
+      b.vx += (Math.random() - 0.5) * 1.4;
+    }
+
+    const dx = b.x - cx;
+    const dy = b.y - cy;
+    const dist = Math.hypot(dx, dy);
+    const maxDist = arenaRadius - b.r;
+
+    if(dist > maxDist && dist > 0){
+      const nx = dx / dist;
+      const ny = dy / dist;
+      b.x = cx + nx * maxDist;
+      b.y = cy + ny * maxDist;
+      const dot = b.vx * nx + b.vy * ny;
+      b.vx = (b.vx - 2 * dot * nx) * 0.98;
+      b.vy = (b.vy - 2 * dot * ny) * 0.98;
+    }
+
+    const minSpeed = spinning ? 2.2 : 0.75;
+    const maxSpeed = spinning ? 6.5 : 2.1;
+    const curSpeed = Math.hypot(b.vx, b.vy) || 1;
+    if(curSpeed < minSpeed){
+      b.vx = (b.vx / curSpeed) * minSpeed;
+      b.vy = (b.vy / curSpeed) * minSpeed;
+    }else if(curSpeed > maxSpeed){
+      b.vx = (b.vx / curSpeed) * maxSpeed;
+      b.vy = (b.vy / curSpeed) * maxSpeed;
+    }
+  }
+
+  /* Colisiones suaves entre bolitas */
+  for(let i = 0; i < balls.length; i++){
+    for(let j = i + 1; j < balls.length; j++){
+      const a = balls[i];
+      const b = balls[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+      const minDist = a.r + b.r - 1;
+      if(dist > 0 && dist < minDist){
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const overlap = (minDist - dist) * 0.5;
+        a.x -= nx * overlap;
+        a.y -= ny * overlap;
+        b.x += nx * overlap;
+        b.y += ny * overlap;
+        const tempVx = a.vx;
+        const tempVy = a.vy;
+        a.vx = b.vx * 0.92;
+        a.vy = b.vy * 0.92;
+        b.vx = tempVx * 0.92;
+        b.vy = tempVy * 0.92;
+      }
+    }
+  }
+
+  /* Dibujar bolitas */
+  for(let i = 0; i < balls.length; i++){
+    const b = balls[i];
+    const isWinner = !spinning && highlightedIndex === b.index;
+    const drawR = isWinner ? b.r + 5 : b.r;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, drawR, 0, Math.PI * 2);
+    ctx.fillStyle = isWinner ? "#e5be63" : b.color;
+    ctx.fill();
+    ctx.lineWidth = isWinner ? 3 : 1.8;
+    ctx.strokeStyle = isWinner ? "#fff9e3" : "rgba(255,255,255,0.72)";
+    ctx.stroke();
+
+    /* Pequeño brillo superior en cada bolita */
+    ctx.beginPath();
+    ctx.arc(b.x - drawR * 0.28, b.y - drawR * 0.28, drawR * 0.26, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.fill();
+
+    ctx.fillStyle = isWinner ? "#162936" : "#f8fbfd";
+    ctx.font = `800 ${isWinner ? 11 : 9}px "Plus Jakarta Sans", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(b.label, b.x, b.y + 0.5);
+    ctx.restore();
+  }
+
+  animFrameId = window.requestAnimationFrame(stepTombola);
 }
 
 function render(){
@@ -465,11 +616,12 @@ function render(){
   document.getElementById("turnName").textContent=select.value!==""?people[Number(select.value)][0]:(available.length?"Elige tu nombre":"¡Todos participaron!");
   const btn=document.getElementById("spin");
   btn.disabled=!apiReady||state.done.length===people.length||spinning||select.value==="";
-  btn.textContent=state.done.length===people.length?"¡Intercambio completo! 🎉":"🎡 Girar la ruleta";
+  btn.textContent=state.done.length===people.length?"¡Intercambio completo! 🎉":"🎡 Girar la tómbola";
 }
 
 document.getElementById("giverSelect").addEventListener("change",()=>{
   const s=document.getElementById("giverSelect"),i=Number(s.value);
+  highlightedIndex=null;
   document.getElementById("turnName").textContent=s.value!==""&&people[i]?people[i][0]:"Elige tu nombre";
   document.getElementById("spin").disabled=!apiReady||s.value===""||spinning;
   document.getElementById("result").innerHTML='<div class="small">Cuando estés listo, presiona el botón y descubre a quién le regalas.</div>';
@@ -480,22 +632,20 @@ document.getElementById("spin").addEventListener("click",async()=>{
   if(spinning)return;
   const select=document.getElementById("giverSelect"),giver=Number(select.value);
   if(select.value===""||!Number.isInteger(giver)||!people[giver]||state.done.includes(giver))return;
+  highlightedIndex=null;
   spinning=true;render();
-  document.getElementById("status").textContent="Conectando con la memoria central…";
-  document.getElementById("result").innerHTML=`<div class="small">🎄 ${esc(people[giver][0])} está girando… ¡redoble de tambores!</div>`;
+  document.getElementById("status").textContent="Agitando la tómbola y consultando registro…";
+  document.getElementById("result").innerHTML=`<div class="small">🎄 ${esc(people[giver][0])} está girando la tómbola… ¡redoble de tambores!</div>`;
   try{
     const response=await apiCall({action:"spin",giver:String(giver)});
     if(!response||!response.ok)throw new Error(response&&response.error?response.error:"No se pudo registrar el giro.");
     const recipient=response.recipientIndex;
     if(!Number.isInteger(recipient)||!people[recipient])throw new Error("El servidor devolvió un resultado no válido.");
     state.done=Array.isArray(response.done)?response.done:state.done.concat([giver]);
-    const wheel=document.getElementById("wheel"),current=Number(wheel.dataset.rotation)||0;
-    const slice=360/people.length,recipientCenter=-90+(recipient+.5)*slice;
-    const remainder=(((-90-recipientCenter-current)%360)+360)%360;
-    const rotation=current+5*360+remainder;
-    wheel.dataset.rotation=String(rotation);wheel.style.transform=`rotate(${rotation}deg)`;
     window.setTimeout(()=>{
-      spinning=false;render();
+      spinning=false;
+      highlightedIndex=recipient;
+      render();
       document.getElementById("status").textContent="¡Tu participación quedó guardada!";
       document.getElementById("result").innerHTML=
         `<div class="small">🎉 <strong>${esc(people[giver][0])}</strong>, tu regalo es para:</div>
@@ -503,7 +653,7 @@ document.getElementById("spin").addEventListener("click",async()=>{
          <div>🎁 Suéter talla <strong>${esc(response.recipientSize)}</strong></div>
          ${response.recipientType?`<div class="small" style="margin-top:8px;padding:9px;border-radius:10px;background:rgba(240,198,108,0.22);border:1px solid rgba(240,198,108,0.55);color:#fff2c6">📌 Nota: esta persona indicó <strong>${esc(response.recipientType)}</strong>. Tenlo presente al elegir su regalo.</div>`:""}
          <div class="small" style="margin-top:6px;">Resultado registrado correctamente.</div>`;
-    },4100);
+    },3200);
   }catch(error){
     spinning=false;render();
     document.getElementById("status").textContent=error.message||"Ocurrió un error.";
@@ -518,7 +668,7 @@ async function init(){
     people=Array.isArray(response.participants)?response.participants:[];
     if(!people.length)throw new Error("La memoria central no devolvió participantes.");
     state.done=Array.isArray(response.done)?response.done:[];
-    renderWheelNames();
+    createTombolaBalls();
     apiReady=true;render();
     document.getElementById("status").textContent="";
   }catch(error){
