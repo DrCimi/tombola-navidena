@@ -9,12 +9,12 @@
 :root{
   --pine:#123d32;
   --pine2:#1c604b;
-  --berry:#b3243b;
-  --berry-dark:#7d182b;
-  --gold:#e8bd65;
-  --ink:#24352e;
-  --muted:#67776f;
-  --panel:#fffdf7f5;
+  --berry:#d6344d;
+  --berry-dark:#8e1b30;
+  --gold:#f0c66c;
+  --ink:#f4f9fc;
+  --muted:#cde3f2;
+  --panel:rgba(16, 54, 82, 0.76);
 }
 *{box-sizing:border-box}
 body{
@@ -32,7 +32,7 @@ body:before{
   position:fixed;
   inset:0;
   pointer-events:none;
-  background:rgba(7,28,22,0.28);
+  background:rgba(7,28,22,0.22);
 }
 main{
   position:relative;
@@ -47,9 +47,9 @@ main{
   border:3px solid var(--gold);
   border-radius:28px;
   padding:clamp(18px,4vw,30px);
-  box-shadow:0 20px 46px rgba(4,20,15,0.55),inset 0 1px #fff;
+  box-shadow:0 20px 46px rgba(4,20,15,0.55),inset 0 1px rgba(255,255,255,0.24);
   margin:12px 0;
-  backdrop-filter:blur(3px);
+  backdrop-filter:blur(7px);
 }
 .hero-in-panel{
   text-align:center;
@@ -61,12 +61,12 @@ h1{
   font-size:clamp(1.95rem,5.5vw,3rem);
   line-height:1.05;
   margin:4px 0 6px;
-  color:var(--berry);
-  text-shadow:0 2px 0 #fff;
+  color:#ff6b81;
+  text-shadow:0 2px 10px rgba(4,16,28,0.75);
 }
 .subtitle{
   margin:0;
-  color:#355246;
+  color:#d9eefb;
   font-weight:700;
   font-size:0.95rem;
 }
@@ -77,16 +77,16 @@ h1{
   gap:10px;
   flex-wrap:wrap;
   font-weight:800;
-  color:var(--pine);
+  color:#fff3cf;
 }
 .counter{
   font-size:.85rem;
-  color:#5b6d63;
+  color:#d2e7f5;
   font-weight:700;
 }
 .progress{
   height:11px;
-  background:#e6e5d6;
+  background:rgba(255,255,255,0.18);
   border-radius:20px;
   overflow:hidden;
   margin:10px 0 16px;
@@ -94,7 +94,7 @@ h1{
 .bar{
   height:100%;
   width:0;
-  background:linear-gradient(90deg,var(--pine2),#86a853,var(--gold));
+  background:linear-gradient(90deg,#34b386,#97c45d,var(--gold));
   transition:width .3s;
   border-radius:20px;
 }
@@ -111,28 +111,28 @@ h1{
   font-weight:800;
   letter-spacing:.07em;
   text-transform:uppercase;
-  color:#2d5944;
+  color:#f7dfa0;
   margin:0 0 7px;
 }
 select{
   width:100%;
   padding:13px 15px;
-  border:1.5px solid #c5d2b9;
+  border:1.5px solid rgba(240,198,108,0.65);
   border-radius:14px;
-  background:#fffef9;
-  color:#1f3b2e;
+  background:rgba(255,253,247,0.95);
+  color:#183228;
   font:700 1rem 'Plus Jakarta Sans',sans-serif;
-  outline-color:#b99a4e;
+  outline-color:#f0c66c;
 }
 select:disabled{opacity:.65}
 .turn-card{
   padding:12px 16px;
   border-radius:18px;
   text-align:center;
-  background:linear-gradient(135deg,#154939,#22654b);
+  background:linear-gradient(135deg,rgba(18,68,54,0.92),rgba(28,104,80,0.92));
   color:#fff;
-  box-shadow:0 8px 18px rgba(21,61,44,0.2);
-  border:2px solid #d8b75e;
+  box-shadow:0 8px 18px rgba(4,20,15,0.32);
+  border:2px solid var(--gold);
   display:flex;
   flex-direction:column;
   justify-content:center;
@@ -165,7 +165,7 @@ select:disabled{opacity:.65}
   z-index:3;
   color:var(--gold);
   font-size:38px;
-  filter:drop-shadow(0 2px 2px rgba(70,45,15,0.65));
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.7));
 }
 .wheel{
   width:100%;
@@ -173,7 +173,7 @@ select:disabled{opacity:.65}
   border-radius:50%;
   border:9px solid #fff9e9;
   outline:4px solid #c69a46;
-  box-shadow:0 12px 28px rgba(24,59,43,0.32);
+  box-shadow:0 12px 28px rgba(4,20,15,0.45);
   display:grid;
   place-items:center;
   background:conic-gradient(#176348 0 25%,#b52a3e 25% 50%,#e5b955 50% 75%,#275b79 75% 100%);
@@ -207,16 +207,21 @@ select:disabled{opacity:.65}
   text-align:center;
   min-height:104px;
   padding:8px 6px;
+  color:#f4f9fc;
 }
 .result .name{
   font-family:'Baloo 2',cursive,sans-serif;
   font-size:clamp(1.9rem,5.2vw,2.7rem);
   font-weight:800;
   line-height:1.1;
-  color:var(--berry);
+  color:#ffd66b;
+  text-shadow:0 2px 10px rgba(0,0,0,0.55);
   margin:4px 0;
 }
-.small{font-size:.92rem;color:var(--muted)}
+.small{
+  font-size:.92rem;
+  color:#dcecf6;
+}
 .bottom-bar{
   display:grid;
   grid-template-columns:1fr auto 1fr;
@@ -226,7 +231,7 @@ select:disabled{opacity:.65}
 }
 .info-side{
   font-size:.82rem;
-  color:#4c5e54;
+  color:#cde3f2;
   line-height:1.35;
 }
 .info-side.right{text-align:right}
@@ -240,25 +245,25 @@ button{
   cursor:pointer;
   transition:transform .15s,filter .15s;
 }
-button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.04)}
+button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.05)}
 .primary{
-  background:linear-gradient(135deg,var(--berry),var(--berry-dark));
+  background:linear-gradient(135deg,#d6344d,#8e1b30);
   color:#fff;
-  box-shadow:0 5px 0 #5b1120,0 8px 16px rgba(139,27,48,0.28);
+  box-shadow:0 5px 0 #5b1120,0 8px 16px rgba(0,0,0,0.35);
 }
 button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .status{
   min-height:22px;
   text-align:center;
   font-size:.86rem;
-  color:#8b2437;
+  color:#ffd66b;
   font-weight:700;
   margin-top:10px;
 }
 .notice{
   font-size:.83rem;
   line-height:1.5;
-  color:#607067;
+  color:#c5deef;
   text-align:center;
   margin:12px 0 0;
 }
@@ -267,10 +272,10 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   bottom:16px;
   right:16px;
   z-index:100;
-  background:#fffdf7;
+  background:rgba(16,54,82,0.92);
   padding:6px;
   border-radius:999px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.28);
+  box-shadow:0 6px 18px rgba(0,0,0,0.38);
   border:2px solid var(--gold);
 }
 .audio-btn{
@@ -443,7 +448,7 @@ document.getElementById("spin").addEventListener("click",async()=>{
         `<div class="small">🎉 <strong>${esc(people[giver][0])}</strong>, tu regalo es para:</div>
          <div class="name">${esc(response.recipientName)}</div>
          <div>🎁 Suéter talla <strong>${esc(response.recipientSize)}</strong></div>
-         ${response.recipientType?`<div class="small" style="margin-top:8px;padding:9px;border-radius:10px;background:#f4ead0;color:#6c4a16">📌 Nota: esta persona indicó <strong>${esc(response.recipientType)}</strong>. Tenlo presente al elegir su regalo.</div>`:""}
+         ${response.recipientType?`<div class="small" style="margin-top:8px;padding:9px;border-radius:10px;background:rgba(240,198,108,0.22);border:1px solid rgba(240,198,108,0.55);color:#fff2c6">📌 Nota: esta persona indicó <strong>${esc(response.recipientType)}</strong>. Tenlo presente al elegir su regalo.</div>`:""}
          <div class="small" style="margin-top:6px;">Resultado registrado correctamente.</div>`;
     },4100);
   }catch(error){
