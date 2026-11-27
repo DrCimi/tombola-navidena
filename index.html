@@ -457,14 +457,14 @@ function apiCall(params){
   });
 }
 
-/* Colores suaves y mate para las bolitas de la tómbola */
+/* Paleta decembrina alegre y equilibrada para las esferas */
 const ballPalette = [
-  "#6e9cb5",
-  "#789e8c",
-  "#b57b84",
-  "#bfa46b",
-  "#8799b8",
-  "#94ab85"
+  "#e11d48", // Rojo nochebuena alegre
+  "#10b981", // Verde pino festivo
+  "#fbbf24", // Dorado cálido de luz navideña
+  "#38bdf8", // Azul escarcha / invierno
+  "#f8fafc", // Blanco nieve suave
+  "#f59e0b"  // Ámbar cálido tipo ponche
 ];
 
 function createTombolaBalls(){
@@ -580,20 +580,21 @@ function stepTombola(){
     ctx.save();
     ctx.beginPath();
     ctx.arc(b.x, b.y, drawR, 0, Math.PI * 2);
-    ctx.fillStyle = isWinner ? "#e5be63" : b.color;
+    ctx.fillStyle = isWinner ? "#fde047" : b.color;
     ctx.fill();
     ctx.lineWidth = isWinner ? 3 : 1.8;
-    ctx.strokeStyle = isWinner ? "#fff9e3" : "rgba(255,255,255,0.72)";
+    ctx.strokeStyle = isWinner ? "#ffffff" : "rgba(255,255,255,0.85)";
     ctx.stroke();
 
     /* Pequeño brillo superior en cada bolita */
     ctx.beginPath();
     ctx.arc(b.x - drawR * 0.28, b.y - drawR * 0.28, drawR * 0.26, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.fillStyle = "rgba(255,255,255,0.42)";
     ctx.fill();
 
-    ctx.fillStyle = isWinner ? "#162936" : "#f8fbfd";
-    ctx.font = `800 ${isWinner ? 11 : 9}px "Plus Jakarta Sans", sans-serif`;
+    const isLightBall = !isWinner && (b.color === "#fbbf24" || b.color === "#38bdf8" || b.color === "#f8fafc" || b.color === "#f59e0b");
+    ctx.fillStyle = isWinner ? "#122636" : (isLightBall ? "#132938" : "#ffffff");
+    ctx.font = `800 ${isWinner ? 11 : 9.5}px "Plus Jakarta Sans", sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(b.label, b.x, b.y + 0.5);
