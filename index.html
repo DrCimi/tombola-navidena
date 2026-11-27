@@ -50,7 +50,7 @@ body:before{
   width:100%;
   height:100%;
   pointer-events:none;
-  z-index:1;
+  z-index:50;
 }
 main{
   position:relative;
@@ -573,8 +573,9 @@ let animFrameId = null;
 let surpriseTimer = null;
 let glintTimer = null;
 
-/* Nieve y confeti ligero */
+/* Nieve constante con acumulación en la parte baja y confeti ligero */
 let snowflakes = [];
+let snowPile = [];
 let snowFrameId = null;
 let confettiPieces = [];
 let confettiFrameId = null;
@@ -684,45 +685,113 @@ musicBtn.addEventListener("click", async (e) => {
 function initSnow(){
   const canvas = document.getElementById("snowCanvas");
   if(!canvas) return;
+  const segWidth = 12;
+  const maxPileHeight = 52;
+
+  const rebuildPile = () => {
+    const cols = Math.max(12, Math.ceil(window.innerWidth / segWidth) + 1);
+    const nextPile = new Array(cols).fill(0);
+    for(let i = 0; i < cols; i++){
+      const prev = snowPile[i] || 0;
+      nextPile[i] = Math.min(maxPileHeight, Math.max(6, prev || (6 + Math.sin(i * 0.45) * 3)));
+    }
+    snowPile = nextPile;
+  };
+
   const resize = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    rebuildPile();
   };
   resize();
   window.addEventListener("resize", resize);
 
-  const count = Math.min(48, Math.max(22, Math.floor(window.innerWidth / 32)));
+  const count = Math.min(165, Math.max(110, Math.floor(window.innerWidth / 8)));
   snowflakes = Array.from({ length: count }, (_, i) => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    r: 1.4 + (i % 3) * 0.9,
-    vy: 0.45 + (i % 4) * 0.22,
-    drift: (Math.random() - 0.5) * 0.45,
+    r: 1.5 + (i % 4) * 0.95,
+    vy: 0.75 + (i % 5) * 0.28,
+    drift: (Math.random() - 0.5) * 0.55,
     phase: Math.random() * Math.PI * 2,
-    alpha: 0.25 + (i % 4) * 0.12
+    alpha: 0.45 + (i % 4) * 0.14
   }));
+
+  function depositSnow(x, amount){
+    if(!snowPile.length) return;
+    const idx = Math.max(0, Math.min(snowPile.length - 1, Math.floor(x / segWidth)));
+    for(let offset = -1; offset <= 1; offset++){
+      const target = idx + offset;
+      if(target >= 0 && target < snowPile.length){
+        const weight = offset === 0 ? 1 : 0.45;
+        snowPile[target] = Math.min(maxPileHeight, snowPile[target] + amount * weight);
+      }
+    }
+    /* Suavizado leve para evitar picos artificiales */
+    for(let i = 1; i < snowPile.length - 1; i++){
+      snowPile[i] = snowPile[i] * 0.78 + (snowPile[i - 1] + snowPile[i + 1]) * 0.11;
+    }
+    /* Compactación suave cuando se acerca al tope para mantener acumulación constante */
+    let avg = 0;
+    for(let i = 0; i < snowPile.length; i++) avg += snowPile[i];
+    avg /= snowPile.length;
+    if(avg > maxPileHeight - 6){
+      for(let i = 0; i < snowPile.length; i++){
+        snowPile[i] = Math.max(8, snowPile[i] - 0.18);
+      }
+    }
+  }
 
   function tickSnow(){
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     for(let i = 0; i < snowflakes.length; i++){
       const f = snowflakes[i];
-      f.phase += 0.015;
+      f.phase += 0.022;
       f.y += f.vy;
-      f.x += f.drift + Math.sin(f.phase) * 0.25;
+      f.x += f.drift + Math.sin(f.phase) * 0.42;
 
-      if(f.y > canvas.height + 8){
-        f.y = -8;
+      if(f.x > canvas.width + 10) f.x = -10;
+      if(f.x < -10) f.x = canvas.width + 10;
+
+      const colIdx = snowPile.length
+        ? Math.max(0, Math.min(snowPile.length - 1, Math.floor(f.x / segWidth)))
+        : 0;
+      const groundY = canvas.height - (snowPile[colIdx] || 0) - f.r * 0.4;
+
+      if(f.y >= groundY){
+        depositSnow(f.x, 0.22 + f.r * 0.07);
+        f.y = -10 - Math.random() * 24;
         f.x = Math.random() * canvas.width;
       }
-      if(f.x > canvas.width + 8) f.x = -8;
-      if(f.x < -8) f.x = canvas.width + 8;
 
       ctx.beginPath();
       ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(248, 252, 255, ${f.alpha})`;
+      ctx.fillStyle = `rgba(250, 253, 255, ${f.alpha})`;
       ctx.fill();
     }
+
+    /* Dibujar nieve acumulada en la parte inferior de toda la pantalla */
+    if(snowPile.length > 1){
+      ctx.save();
+      const grad = ctx.createLinearGradient(0, canvas.height - maxPileHeight, 0, canvas.height);
+      grad.addColorStop(0, "rgba(240, 248, 255, 0.88)");
+      grad.addColorStop(1, "rgba(255, 255, 255, 0.96)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height);
+      for(let i = 0; i < snowPile.length; i++){
+        const px = Math.min(canvas.width, i * segWidth);
+        const py = canvas.height - snowPile[i];
+        ctx.lineTo(px, py);
+      }
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
     snowFrameId = window.requestAnimationFrame(tickSnow);
   }
   if(!snowFrameId) tickSnow();
