@@ -180,12 +180,12 @@ select:disabled{opacity:.65}
   width:100%;
   height:100%;
   border-radius:50%;
-  border:9px solid #fff9e9;
-  outline:4px solid #c69a46;
-  box-shadow:0 12px 28px rgba(4,20,15,0.45);
+  border:9px solid rgba(226, 238, 248, 0.88);
+  outline:4px solid rgba(176, 196, 214, 0.7);
+  box-shadow:0 12px 28px rgba(4,20,15,0.45), inset 0 0 24px rgba(210, 235, 255, 0.35);
   display:grid;
   place-items:center;
-  background:conic-gradient(#176348 0 25%,#b52a3e 25% 50%,#e5b955 50% 75%,#275b79 75% 100%);
+  background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.25), rgba(16,54,82,0.55));
   transition:transform 4s cubic-bezier(.12,.75,.15,1);
   position:relative;
 }
@@ -193,7 +193,7 @@ select:disabled{opacity:.65}
   content:"";
   position:absolute;
   inset:10px;
-  border:1px dashed #fff9e5;
+  border:1px dashed rgba(244, 249, 252, 0.75);
   border-radius:50%;
   pointer-events:none;
 }
@@ -210,7 +210,11 @@ select:disabled{opacity:.65}
   stroke-width:2.3px;
   stroke-linejoin:round;
 }
-.wheel-center{fill:#fff7df;stroke:#c69a46;stroke-width:5}
+.wheel-center{
+  fill:rgba(225, 239, 248, 0.92);
+  stroke:#8fa8be;
+  stroke-width:4;
+}
 .wheel-center-text{font-size:25px;text-anchor:middle;dominant-baseline:middle}
 .result{
   text-align:center;
@@ -357,7 +361,7 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 <!-- Reproductor de música de fondo -->
 <div class="audio-control">
  <button type="button" class="audio-btn" id="toggleMusic">🎵 Música</button>
- <audio id="bgMusic" loop preload="auto">
+ <audio id="bgMusic" loop autoplay preload="auto">
   <source src="navidad.mp3" type="audio/mpeg">
  </audio>
 </div>
@@ -370,6 +374,46 @@ let people = [];
 let state = { done: [] };
 let spinning = false;
 let apiReady = false;
+
+const bgAudio = document.getElementById("bgMusic");
+const musicBtn = document.getElementById("toggleMusic");
+
+async function startMusic(){
+  const srcEl = bgAudio.querySelector("source");
+  if(!srcEl || !srcEl.getAttribute("src")) return false;
+  try{
+    bgAudio.volume = 0.35;
+    await bgAudio.play();
+    musicBtn.textContent = "🔇 Silenciar";
+    return true;
+  }catch(_){
+    musicBtn.textContent = "🎵 Música";
+    return false;
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  startMusic();
+});
+
+document.addEventListener("pointerdown", async function unlockMusicOnce(){
+  if(bgAudio.paused){
+    const started = await startMusic();
+    if(started) document.removeEventListener("pointerdown", unlockMusicOnce);
+  }else{
+    document.removeEventListener("pointerdown", unlockMusicOnce);
+  }
+});
+
+musicBtn.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  if(bgAudio.paused){
+    await startMusic();
+  }else{
+    bgAudio.pause();
+    musicBtn.textContent = "🎵 Música";
+  }
+});
 
 function esc(s){
   return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -395,12 +439,12 @@ function apiCall(params){
 
 function renderWheelNames(){
   const svg=document.getElementById("wheelNames"),cx=200,cy=200,r=190,inner=43;
-  const palette=["#176348","#a52a3d","#b28a37","#245873"],slice=360/people.length,parts=[];
+  const palette=["#2d5a6b","#3d5e52","#7c454e","#8f7a4a"],slice=360/people.length,parts=[];
   for(let i=0;i<people.length;i++){
     const start=(-90+i*slice)*Math.PI/180,end=(-90+(i+1)*slice)*Math.PI/180;
     const x1=cx+r*Math.cos(start),y1=cy+r*Math.sin(start),x2=cx+r*Math.cos(end),y2=cy+r*Math.sin(end);
     const ix1=cx+inner*Math.cos(start),iy1=cy+inner*Math.sin(start),ix2=cx+inner*Math.cos(end),iy2=cy+inner*Math.sin(end);
-    parts.push(`<path d="M ${ix1.toFixed(2)} ${iy1.toFixed(2)} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${inner} ${inner} 0 0 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z" fill="${palette[i%palette.length]}" stroke="#fff4d9" stroke-width="1.5"/>`);
+    parts.push(`<path d="M ${ix1.toFixed(2)} ${iy1.toFixed(2)} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${ix2.toFixed(2)} ${iy2.toFixed(2)} A ${inner} ${inner} 0 0 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z" fill="${palette[i%palette.length]}" stroke="#eef6fb" stroke-width="1.4"/>`);
     const mid=(-90+(i+.5)*slice)*Math.PI/180,tx=cx+124*Math.cos(mid),ty=cy+124*Math.sin(mid),rotation=-90+(i+.5)*slice+90;
     parts.push(`<text class="wheel-label" x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" transform="rotate(${rotation.toFixed(2)} ${tx.toFixed(2)} ${ty.toFixed(2)})">${esc(people[i][0])}</text>`);
   }
@@ -464,28 +508,6 @@ document.getElementById("spin").addEventListener("click",async()=>{
     spinning=false;render();
     document.getElementById("status").textContent=error.message||"Ocurrió un error.";
     document.getElementById("result").innerHTML='<div class="small">No se registró el giro. Puedes intentarlo nuevamente.</div>';
-  }
-});
-
-document.getElementById("toggleMusic").addEventListener("click",async()=>{
-  const audio=document.getElementById("bgMusic");
-  const btn=document.getElementById("toggleMusic");
-  const srcEl=audio.querySelector("source");
-  if(!srcEl || !srcEl.getAttribute("src")){
-    document.getElementById("status").textContent="Agrega un enlace MP3 en <audio> para activar la música.";
-    return;
-  }
-  if(audio.paused){
-    try{
-      audio.volume=0.35;
-      await audio.play();
-      btn.textContent="🔇 Silenciar";
-    }catch(_){
-      document.getElementById("status").textContent="No se pudo reproducir el audio.";
-    }
-  }else{
-    audio.pause();
-    btn.textContent="🎵 Música";
   }
 });
 
