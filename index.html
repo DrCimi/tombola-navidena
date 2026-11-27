@@ -42,9 +42,19 @@ body:before{
   inset:0;
   pointer-events:none;
   background:rgba(7,28,22,0.22);
+  z-index:0;
+}
+#snowCanvas{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:1;
 }
 main{
   position:relative;
+  z-index:2;
   max-width:860px;
   margin:auto;
   padding:22px 16px 64px;
@@ -324,6 +334,8 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 </style>
 </head>
 <body>
+<canvas id="snowCanvas" aria-hidden="true"></canvas>
+
 <main>
  <section class="panel">
   <header class="hero-in-panel">
@@ -395,12 +407,75 @@ let balls = [];
 let highlightedIndex = null;
 let animFrameId = null;
 
+/* Nieve sutil en el fondo */
+let snowflakes = [];
+let snowFrameId = null;
+
 const bgAudio = document.getElementById("bgMusic");
 const musicBtn = document.getElementById("toggleMusic");
+let soundMuted = false;
+let audioCtx = null;
+
+function getAudioContext(){
+  if(soundMuted) return null;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if(!Ctx) return null;
+  if(!audioCtx) audioCtx = new Ctx();
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+/* Efecto corto de redoble al iniciar giro */
+function playDrumrollCue(){
+  const ctx = getAudioContext();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  const taps = [0, 0.08, 0.16, 0.23, 0.29, 0.34, 0.38, 0.42];
+  taps.forEach((offset, idx) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(145 + idx * 8, now + offset);
+    osc.frequency.exponentialRampToValueAtTime(75, now + offset + 0.055);
+    gain.gain.setValueAtTime(0.001, now + offset);
+    gain.gain.linearRampToValueAtTime(0.08, now + offset + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.06);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + offset);
+    osc.stop(now + offset + 0.065);
+  });
+}
+
+/* Efecto corto de campanita al revelar el ganador */
+function playChimeCue(){
+  const ctx = getAudioContext();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  const notes = [587.33, 880, 1174.66];
+  notes.forEach((freq, idx) => {
+    const start = now + idx * 0.09;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, start);
+    gain.gain.setValueAtTime(0.001, start);
+    gain.gain.linearRampToValueAtTime(0.09, start + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0008, start + 0.45);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + 0.48);
+  });
+}
 
 async function startMusic(){
   const srcEl = bgAudio.querySelector("source");
   if(!srcEl || !srcEl.getAttribute("src")) return false;
+  soundMuted = false;
+  getAudioContext();
   try{
     bgAudio.volume = 0.35;
     await bgAudio.play();
@@ -413,14 +488,16 @@ async function startMusic(){
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  initSnow();
   startMusic();
 });
 
 document.addEventListener("pointerdown", async function unlockMusicOnce(){
-  if(bgAudio.paused){
+  if(bgAudio.paused && !soundMuted){
     const started = await startMusic();
     if(started) document.removeEventListener("pointerdown", unlockMusicOnce);
   }else{
+    getAudioContext();
     document.removeEventListener("pointerdown", unlockMusicOnce);
   }
 });
@@ -431,9 +508,57 @@ musicBtn.addEventListener("click", async (e) => {
     await startMusic();
   }else{
     bgAudio.pause();
+    soundMuted = true;
     musicBtn.textContent = "🎵 Música";
   }
 });
+
+function initSnow(){
+  const canvas = document.getElementById("snowCanvas");
+  if(!canvas) return;
+  const resize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  };
+  resize();
+  window.addEventListener("resize", resize);
+
+  const count = Math.min(48, Math.max(22, Math.floor(window.innerWidth / 32)));
+  snowflakes = Array.from({ length: count }, (_, i) => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: 1.4 + (i % 3) * 0.9,
+    vy: 0.45 + (i % 4) * 0.22,
+    drift: (Math.random() - 0.5) * 0.45,
+    phase: Math.random() * Math.PI * 2,
+    alpha: 0.25 + (i % 4) * 0.12
+  }));
+
+  function tickSnow(){
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(let i = 0; i < snowflakes.length; i++){
+      const f = snowflakes[i];
+      f.phase += 0.015;
+      f.y += f.vy;
+      f.x += f.drift + Math.sin(f.phase) * 0.25;
+
+      if(f.y > canvas.height + 8){
+        f.y = -8;
+        f.x = Math.random() * canvas.width;
+      }
+      if(f.x > canvas.width + 8) f.x = -8;
+      if(f.x < -8) f.x = canvas.width + 8;
+
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(248, 252, 255, ${f.alpha})`;
+      ctx.fill();
+    }
+    snowFrameId = window.requestAnimationFrame(tickSnow);
+  }
+  if(!snowFrameId) tickSnow();
+}
 
 function esc(s){
   return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -459,12 +584,12 @@ function apiCall(params){
 
 /* Paleta decembrina alegre y equilibrada para las esferas */
 const ballPalette = [
-  "#e11d48", // Rojo nochebuena alegre
-  "#10b981", // Verde pino festivo
-  "#fbbf24", // Dorado cálido de luz navideña
-  "#38bdf8", // Azul escarcha / invierno
-  "#f8fafc", // Blanco nieve suave
-  "#f59e0b"  // Ámbar cálido tipo ponche
+  "#e11d48",
+  "#10b981",
+  "#fbbf24",
+  "#38bdf8",
+  "#f8fafc",
+  "#f59e0b"
 ];
 
 function createTombolaBalls(){
@@ -502,6 +627,7 @@ function stepTombola(){
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
   const arenaRadius = canvas.width / 2 - 12;
+  const nowSec = performance.now() / 1000;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -509,6 +635,19 @@ function stepTombola(){
 
   for(let i = 0; i < balls.length; i++){
     const b = balls[i];
+    const isWinner = !spinning && highlightedIndex === b.index;
+
+    if(isWinner){
+      /* Subir suavemente hacia la zona superior destacada de la tómbola */
+      const targetX = cx;
+      const targetY = cy - arenaRadius * 0.42 + Math.sin(nowSec * 3.2) * 3;
+      b.x += (targetX - b.x) * 0.12;
+      b.y += (targetY - b.y) * 0.12;
+      b.vx = 0;
+      b.vy = 0;
+      continue;
+    }
+
     b.x += b.vx * boost;
     b.y += b.vy * boost;
 
@@ -544,9 +683,11 @@ function stepTombola(){
     }
   }
 
-  /* Colisiones suaves entre bolitas */
+  /* Colisiones suaves entre bolitas no destacadas */
   for(let i = 0; i < balls.length; i++){
+    if(!spinning && highlightedIndex === balls[i].index) continue;
     for(let j = i + 1; j < balls.length; j++){
+      if(!spinning && highlightedIndex === balls[j].index) continue;
       const a = balls[i];
       const b = balls[j];
       const dx = b.x - a.x;
@@ -575,14 +716,27 @@ function stepTombola(){
   for(let i = 0; i < balls.length; i++){
     const b = balls[i];
     const isWinner = !spinning && highlightedIndex === b.index;
-    const drawR = isWinner ? b.r + 5 : b.r;
+    const drawR = isWinner ? b.r + 7 : b.r;
 
     ctx.save();
+
+    if(isWinner){
+      const pulse = 0.55 + 0.45 * Math.sin(nowSec * 6);
+      const haloRadius = drawR + 10 + pulse * 5;
+      const halo = ctx.createRadialGradient(b.x, b.y, drawR * 0.7, b.x, b.y, haloRadius);
+      halo.addColorStop(0, `rgba(253, 224, 71, ${0.75 * pulse + 0.2})`);
+      halo.addColorStop(1, "rgba(253, 224, 71, 0)");
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, haloRadius, 0, Math.PI * 2);
+      ctx.fillStyle = halo;
+      ctx.fill();
+    }
+
     ctx.beginPath();
     ctx.arc(b.x, b.y, drawR, 0, Math.PI * 2);
     ctx.fillStyle = isWinner ? "#fde047" : b.color;
     ctx.fill();
-    ctx.lineWidth = isWinner ? 3 : 1.8;
+    ctx.lineWidth = isWinner ? 3.5 : 1.8;
     ctx.strokeStyle = isWinner ? "#ffffff" : "rgba(255,255,255,0.85)";
     ctx.stroke();
 
@@ -594,7 +748,7 @@ function stepTombola(){
 
     const isLightBall = !isWinner && (b.color === "#fbbf24" || b.color === "#38bdf8" || b.color === "#f8fafc" || b.color === "#f59e0b");
     ctx.fillStyle = isWinner ? "#122636" : (isLightBall ? "#132938" : "#ffffff");
-    ctx.font = `800 ${isWinner ? 11 : 9.5}px "Plus Jakarta Sans", sans-serif`;
+    ctx.font = `800 ${isWinner ? 11.5 : 9.5}px "Plus Jakarta Sans", sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(b.label, b.x, b.y + 0.5);
@@ -635,6 +789,7 @@ document.getElementById("spin").addEventListener("click",async()=>{
   if(select.value===""||!Number.isInteger(giver)||!people[giver]||state.done.includes(giver))return;
   highlightedIndex=null;
   spinning=true;render();
+  playDrumrollCue();
   document.getElementById("status").textContent="Agitando la tómbola y consultando registro…";
   document.getElementById("result").innerHTML=`<div class="small">🎄 ${esc(people[giver][0])} está girando la tómbola… ¡redoble de tambores!</div>`;
   try{
@@ -647,6 +802,7 @@ document.getElementById("spin").addEventListener("click",async()=>{
       spinning=false;
       highlightedIndex=recipient;
       render();
+      playChimeCue();
       document.getElementById("status").textContent="¡Tu participación quedó guardada!";
       document.getElementById("result").innerHTML=
         `<div class="small">🎉 <strong>${esc(people[giver][0])}</strong>, tu regalo es para:</div>
