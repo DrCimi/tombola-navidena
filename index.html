@@ -909,7 +909,16 @@ function resolveExchangeType(recipientIndex, responseType){
   return "";
 }
 
-function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, recipientType){
+function formatSweaterWish(rawType){
+  if(!rawType) return "";
+  const clean = String(rawType).trim().toLowerCase();
+  if(!clean) return "";
+  if(clean.includes("no navide")) return "No quiere sueter navideño";
+  if(clean.includes("navide")) return "quiere sueter navideño";
+  return String(rawType).trim();
+}
+
+function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, sweaterWish){
   const stage = document.getElementById("surpriseStage");
   const pod = document.getElementById("surprisePod");
   const topHalf = document.getElementById("shellTop");
@@ -924,11 +933,11 @@ function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, recip
   bottomHalf.style.setProperty("--shell-color", shellColor);
   winnerEl.textContent = recipientName;
 
-  const sizeLine = recipientSize ? `🎁 Suéter talla ${recipientSize}` : "¡Sorpresa navideña!";
-  const typeLine = recipientType
-    ? `<div style="margin-top:6px;padding:6px 10px;border-radius:10px;background:rgba(240,198,108,0.22);border:1px solid rgba(240,198,108,0.6);color:#fff2c6;font-size:0.82rem;">🎄 Tipo de intercambio: <strong>${esc(recipientType)}</strong></div>`
+  const sizeLine = recipientSize ? `🎁 Talla ${recipientSize}` : "¡Sorpresa navideña!";
+  const wishLine = sweaterWish
+    ? `<div style="margin-top:6px;padding:6px 10px;border-radius:10px;background:rgba(240,198,108,0.22);border:1px solid rgba(240,198,108,0.6);color:#fff2c6;font-size:0.84rem;"><strong>${esc(sweaterWish)}</strong></div>`
     : "";
-  metaEl.innerHTML = `<div>${esc(sizeLine)}</div>${typeLine}`;
+  metaEl.innerHTML = `<div>${esc(sizeLine)}</div>${wishLine}`;
 
   if(surpriseTimer) clearTimeout(surpriseTimer);
   if(glintTimer) clearTimeout(glintTimer);
@@ -1186,19 +1195,20 @@ document.getElementById("spin").addEventListener("click",async()=>{
     const recipient=response.recipientIndex;
     if(!Number.isInteger(recipient)||!people[recipient])throw new Error("El servidor devolvió un resultado no válido.");
     state.done=Array.isArray(response.done)?response.done:state.done.concat([giver]);
-    const resolvedType = resolveExchangeType(recipient, response.recipientType);
+    const rawType = resolveExchangeType(recipient, response.recipientType);
+    const sweaterWish = formatSweaterWish(rawType);
     window.setTimeout(()=>{
       spinning=false;
       highlightedIndex=recipient;
       render();
       playChimeCue();
-      openSurpriseCapsule(recipient, response.recipientName, response.recipientSize, resolvedType);
+      openSurpriseCapsule(recipient, response.recipientName, response.recipientSize, sweaterWish);
       document.getElementById("status").textContent="¡Tu participación quedó guardada!";
       document.getElementById("result").innerHTML=
         `<div class="small">🎉 <strong>${esc(getPersonName(giver))}</strong>, tu regalo es para:</div>
          <div class="name">${esc(response.recipientName)}</div>
-         <div>🎁 Suéter talla <strong>${esc(response.recipientSize)}</strong></div>
-         ${resolvedType?`<div class="small" style="margin-top:8px;padding:9px;border-radius:10px;background:rgba(240,198,108,0.22);border:1px solid rgba(240,198,108,0.55);color:#fff2c6">🎄 Tipo de intercambio: <strong>${esc(resolvedType)}</strong>. Tenlo presente al elegir su regalo.</div>`:""}
+         <div>🎁 Talla <strong>${esc(response.recipientSize)}</strong></div>
+         ${sweaterWish?`<div class="small" style="margin-top:8px;padding:9px;border-radius:10px;background:rgba(240,198,108,0.22);border:1px solid rgba(240,198,108,0.55);color:#fff2c6">🎄 <strong>${esc(sweaterWish)}</strong>. Tenlo presente al elegir su regalo.</div>`:""}
          <div class="small" style="margin-top:6px;">Resultado registrado correctamente.</div>`;
     },3200);
   }catch(error){
