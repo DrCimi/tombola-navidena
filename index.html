@@ -104,7 +104,7 @@ h1{
   font-weight:700;
 }
 
-/* Medidor de mar sin borde: olas limpias + Thousand Sunny de perfil */
+/* Medidor de avance sin borde: olas limpias + Santa en su trineo con renos */
 .sea-progress-wrap{
   position:relative;
   height:56px;
@@ -500,7 +500,7 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
    <span id="count" class="counter">Conectando…</span>
   </div>
   <div class="sea-progress-wrap">
-   <canvas id="seaTrackCanvas" width="780" height="56" role="img" aria-label="Medidor de avance del Thousand Sunny sobre el mar"></canvas>
+   <canvas id="seaTrackCanvas" width="780" height="56" role="img" aria-label="Medidor de avance de Santa Claus en su trineo con renos"></canvas>
   </div>
 
   <div class="controls-grid">
@@ -579,9 +579,9 @@ let animFrameId = null;
 let surpriseTimer = null;
 let glintTimer = null;
 
-/* Estado del medidor de mar con el Thousand Sunny */
+/* Estado del medidor con Santa Claus, su trineo y renos */
 let targetProgressRatio = 0;
-let currentSunnyRatio = 0;
+let currentSleighRatio = 0;
 let seaFrameId = null;
 
 /* Nieve constante con acumulación en la parte baja y confeti de celebración */
@@ -877,156 +877,161 @@ function drawOnePieceConfettiItem(ctx, p){
   ctx.restore();
 }
 
-/* Dibujo fiel de perfil del Thousand Sunny (proa a la izquierda, navegando hacia la derecha) */
-function drawThousandSunny(ctx, x, y, tiltAngle){
+/* Dibujo de Santa Claus en su trineo tirado por dos renos */
+function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(tiltAngle);
-  ctx.scale(1.18, 1.18);
+  ctx.scale(1.15, 1.15);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  // Mástil delantero y mástil trasero
-  ctx.strokeStyle = "#6b3e1e";
-  ctx.lineWidth = 2.1;
+  const legSwing = Math.sin(gallopPhase) * 2.2;
+
+  // Riendas conectando el trineo con los renos (avanzando hacia la derecha)
+  ctx.strokeStyle = "#fde68a";
+  ctx.lineWidth = 0.85;
   ctx.beginPath();
-  ctx.moveTo(-4, 2);
-  ctx.lineTo(-4, -22);
-  ctx.moveTo(9, 2);
-  ctx.lineTo(9, -24);
+  ctx.moveTo(-6, -5);
+  ctx.lineTo(13, -6 + legSwing * 0.25);
+  ctx.moveTo(13, -6 + legSwing * 0.25);
+  ctx.lineTo(25, -6.5 - legSwing * 0.25);
   ctx.stroke();
 
-  // Banderas Jolly Roger en ambos mástiles
-  [
-    { mx: -4, my: -23.5 },
-    { mx: 9, my: -25.5 }
-  ].forEach(f => {
-    ctx.fillStyle = "#1e293b";
-    ctx.fillRect(f.mx - 5.5, f.my, 5.5, 3.2);
-    ctx.fillStyle = "#f8fafc";
-    ctx.beginPath();
-    ctx.arc(f.mx - 2.7, f.my + 1.6, 1.05, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // Vela frontal blanca con guiño de sombrero de paja
-  ctx.fillStyle = "#f8fafc";
-  ctx.strokeStyle = "#475569";
-  ctx.lineWidth = 1;
+  // --- TRINEO DE SANTA (izquierda) ---
+  // Patín inferior dorado
+  ctx.strokeStyle = "#fbbf24";
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.moveTo(-4.5, -18);
-  ctx.quadraticCurveTo(-11.5, -11, -9.5, -3.5);
-  ctx.lineTo(-4.5, -4);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(-22, 4.5);
+  ctx.lineTo(-7, 4.5);
+  ctx.quadraticCurveTo(-4, 4.5, -3, 1.5);
   ctx.stroke();
 
-  ctx.fillStyle = "#eab308";
+  // Soportes del patín
   ctx.beginPath();
-  ctx.ellipse(-7.5, -10.5, 2.2, 1.3, -0.2, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.moveTo(-18, 1);
+  ctx.lineTo(-18, 4.5);
+  ctx.moveTo(-10, 1);
+  ctx.lineTo(-10, 4.5);
+  ctx.stroke();
 
-  // Vela trasera roja a rayas oscuras (característica de la imagen)
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(9.5, -20);
-  ctx.quadraticCurveTo(18.5, -13, 17, -4.5);
-  ctx.lineTo(9.5, -5);
-  ctx.closePath();
-  ctx.fillStyle = "#b91c1c";
-  ctx.fill();
-  ctx.clip();
-
-  ctx.fillStyle = "#1e1b24";
-  for(let sx = 10; sx <= 18; sx += 2.6){
-    ctx.fillRect(sx, -22, 1.2, 20);
-  }
-  ctx.restore();
-
-  ctx.strokeStyle = "#450a0a";
+  // Saco de regalos detrás de Santa
+  ctx.fillStyle = "#b45309";
+  ctx.strokeStyle = "#451a03";
   ctx.lineWidth = 0.9;
   ctx.beginPath();
-  ctx.moveTo(9.5, -20);
-  ctx.quadraticCurveTo(18.5, -13, 17, -4.5);
-  ctx.lineTo(9.5, -5);
-  ctx.closePath();
-  ctx.stroke();
-
-  // Propulsor trasero de madera en popa (derecha)
-  ctx.fillStyle = "#78350f";
-  ctx.strokeStyle = "#3b1706";
-  ctx.lineWidth = 1.1;
-  ctx.fillRect(14.5, 0.5, 4.2, 5.2);
-  ctx.strokeRect(14.5, 0.5, 4.2, 5.2);
-
-  // Casco base de madera
-  ctx.fillStyle = "#d99b52";
-  ctx.strokeStyle = "#3b1d0a";
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.moveTo(-14, -1);
-  ctx.lineTo(15, 0);
-  ctx.lineTo(13.5, 6.8);
-  ctx.lineTo(-10.5, 6.8);
-  ctx.quadraticCurveTo(-13.5, 5.5, -14, -1);
-  ctx.closePath();
+  ctx.arc(-17.5, -3.5, 4.2, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
 
-  // Franja roja curva del casco del Sunny
-  ctx.fillStyle = "#c82333";
+  // Regalo verde con listón dorado
+  ctx.fillStyle = "#16a34a";
+  ctx.fillRect(-15, -6, 4.2, 4.2);
+  ctx.strokeStyle = "#facc15";
+  ctx.lineWidth = 0.9;
   ctx.beginPath();
-  ctx.moveTo(-13.5, -1);
-  ctx.quadraticCurveTo(-5, 4.5, 4, 3.2);
-  ctx.quadraticCurveTo(9, 2.5, 14.8, 0.2);
-  ctx.lineTo(14.5, 3.6);
-  ctx.quadraticCurveTo(5, 6.2, -13.5, 2.2);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(-12.9, -6);
+  ctx.lineTo(-12.9, -1.8);
+  ctx.stroke();
 
-  // Rueda lateral con el número "1"
-  ctx.fillStyle = "#1e293b";
-  ctx.strokeStyle = "#94a3b8";
+  // Cuerpo del trineo rojo con ribete dorado
+  ctx.fillStyle = "#dc2626";
+  ctx.strokeStyle = "#fef08a";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.arc(1.5, 5.2, 3.6, 0, Math.PI * 2);
+  ctx.moveTo(-21, -2);
+  ctx.lineTo(-6, -2);
+  ctx.quadraticCurveTo(-6, 2.2, -11, 2.2);
+  ctx.lineTo(-18, 2.2);
+  ctx.quadraticCurveTo(-21, 2.2, -21, -2);
+  ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
+  // Santa Claus sentado en el trineo
+  // Abrigo rojo
   ctx.fillStyle = "#ef4444";
-  ctx.font = "800 5.2px 'Plus Jakarta Sans', sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("1", 1.5, 5.4);
-
-  // Hueso blanco bajo el mascarón de león
-  ctx.fillStyle = "#f8fafc";
-  ctx.strokeStyle = "#475569";
-  ctx.lineWidth = 0.9;
   ctx.beginPath();
-  ctx.roundRect(-14.5, 1.5, 6.5, 2.6, 1.3);
-  ctx.fill();
-  ctx.stroke();
-
-  // Mascarón de león dorado + melena naranja en la proa (izquierda)
-  ctx.fillStyle = "#ea580c";
-  ctx.beginPath();
-  ctx.arc(-13.8, -2.5, 5.3, 0, Math.PI * 2);
+  ctx.arc(-11.5, -5.5, 3.6, Math.PI * 0.9, Math.PI * 2.1);
+  ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = "#facc15";
-  ctx.strokeStyle = "#78350f";
-  ctx.lineWidth = 1.1;
+  // Cara y barba blanca
+  ctx.fillStyle = "#fde68a";
   ctx.beginPath();
-  ctx.arc(-14.5, -2.5, 4.1, 0, Math.PI * 2);
+  ctx.arc(-10.5, -9.8, 2.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.stroke();
 
-  // Ojo del león
-  ctx.fillStyle = "#1e293b";
+  ctx.fillStyle = "#ffffff";
   ctx.beginPath();
-  ctx.arc(-15.7, -3.2, 0.95, 0, Math.PI * 2);
+  ctx.arc(-9.8, -8.8, 2.1, 0, Math.PI * 0.95);
   ctx.fill();
+
+  // Gorro rojo con pompón blanco
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.moveTo(-13.2, -10.8);
+  ctx.lineTo(-10.5, -15.5);
+  ctx.lineTo(-7.8, -11.2);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(-10.2, -15.6, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // --- DOS RENOS GUIANDO EL TRINEO (derecha) ---
+  function drawSingleReindeer(rx, ry, swing, isRudolph){
+    ctx.save();
+    ctx.translate(rx, ry);
+
+    // Patas animadas
+    ctx.strokeStyle = "#78350f";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-2.5, 1.5);
+    ctx.lineTo(-3.5 - swing * 0.6, 5.2);
+    ctx.moveTo(2.2, 1.5);
+    ctx.lineTo(3.2 + swing * 0.6, 5.2);
+    ctx.stroke();
+
+    // Cuerpo del reno
+    ctx.fillStyle = "#92400e";
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 4.4, 2.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cuello y cabeza mirando a la derecha
+    ctx.fillStyle = "#92400e";
+    ctx.beginPath();
+    ctx.ellipse(4.4, -3.4, 2.5, 1.8, -0.25, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cornamenta
+    ctx.strokeStyle = "#fde68a";
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(3.8, -5.0);
+    ctx.lineTo(2.8, -7.8);
+    ctx.moveTo(3.3, -6.4);
+    ctx.lineTo(1.8, -6.9);
+    ctx.moveTo(4.7, -5.2);
+    ctx.lineTo(5.6, -7.8);
+    ctx.stroke();
+
+    // Nariz (roja brillante en el reno delantero)
+    ctx.fillStyle = isRudolph ? "#ff2e4c" : "#1e1b24";
+    ctx.beginPath();
+    ctx.arc(6.8, -3.1, isRudolph ? 1.35 : 0.95, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  drawSingleReindeer(13, -1.2 + legSwing * 0.25, legSwing, false);
+  drawSingleReindeer(25, -1.6 - legSwing * 0.25, -legSwing, true);
 
   ctx.restore();
 }
@@ -1051,27 +1056,27 @@ function stepSeaProgress(){
   const h = canvas.height;
   const t = performance.now() * 0.0038;
 
-  currentSunnyRatio += (targetProgressRatio - currentSunnyRatio) * 0.08;
-  if(Math.abs(targetProgressRatio - currentSunnyRatio) < 0.0005){
-    currentSunnyRatio = targetProgressRatio;
+  currentSleighRatio += (targetProgressRatio - currentSleighRatio) * 0.08;
+  if(Math.abs(targetProgressRatio - currentSleighRatio) < 0.0005){
+    currentSleighRatio = targetProgressRatio;
   }
 
   ctx.clearRect(0, 0, w, h);
 
-  const seaTopBase = h * 0.62;
-  const fillWidth = Math.max(0, Math.min(w, w * currentSunnyRatio));
+  const seaTopBase = h * 0.66;
+  const fillWidth = Math.max(0, Math.min(w, w * currentSleighRatio));
 
-  // Agua recorrida con olas animadas y espuma
+  // Franja recorrida con olas y espuma blanca
   if(fillWidth > 1){
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(0, h);
     const step = 8;
     for(let x = 0; x <= fillWidth; x += step){
-      const wave = Math.sin(x * 0.042 + t * 1.35) * 2.5 + Math.cos(x * 0.022 - t) * 1.4;
+      const wave = Math.sin(x * 0.042 + t * 1.35) * 2.2 + Math.cos(x * 0.022 - t) * 1.2;
       ctx.lineTo(x, seaTopBase + wave);
     }
-    ctx.lineTo(fillWidth, seaTopBase + Math.sin(fillWidth * 0.042 + t * 1.35) * 2.5);
+    ctx.lineTo(fillWidth, seaTopBase + Math.sin(fillWidth * 0.042 + t * 1.35) * 2.2);
     ctx.lineTo(fillWidth, h);
     ctx.closePath();
 
@@ -1084,7 +1089,7 @@ function stepSeaProgress(){
 
     ctx.beginPath();
     for(let x = 0; x <= fillWidth; x += step){
-      const wave = Math.sin(x * 0.042 + t * 1.35) * 2.5 + Math.cos(x * 0.022 - t) * 1.4;
+      const wave = Math.sin(x * 0.042 + t * 1.35) * 2.2 + Math.cos(x * 0.022 - t) * 1.2;
       const wy = seaTopBase + wave;
       if(x === 0) ctx.moveTo(x, wy);
       else ctx.lineTo(x, wy);
@@ -1095,11 +1100,11 @@ function stepSeaProgress(){
     ctx.restore();
   }
 
-  // Olas sutiles en el tramo restante sin marco ni borde
+  // Olas sutiles en el tramo pendiente sin marco ni borde
   ctx.save();
   ctx.beginPath();
   for(let x = Math.floor(fillWidth); x <= w; x += 10){
-    const wave = Math.sin(x * 0.038 + t * 1.05) * 1.6;
+    const wave = Math.sin(x * 0.038 + t * 1.05) * 1.5;
     const wy = seaTopBase + 3 + wave;
     if(x === Math.floor(fillWidth)) ctx.moveTo(x, wy);
     else ctx.lineTo(x, wy);
@@ -1109,15 +1114,15 @@ function stepSeaProgress(){
   ctx.stroke();
   ctx.restore();
 
-  // Posición del Thousand Sunny con margen para que no se corte
-  const marginX = 30;
+  // Posición de Santa, su trineo y renos con margen para que no se corten
+  const marginX = 36;
   const usableW = Math.max(20, w - marginX * 2);
-  const shipX = marginX + usableW * currentSunnyRatio;
-  const shipWave = Math.sin(shipX * 0.042 + t * 1.35) * 2.5 + Math.cos(shipX * 0.022 - t) * 1.4;
-  const shipY = seaTopBase + shipWave - 1;
-  const tilt = Math.cos(shipX * 0.042 + t * 1.35) * 0.065;
+  const sleighX = marginX + usableW * currentSleighRatio;
+  const sleighWave = Math.sin(sleighX * 0.042 + t * 1.35) * 2.2 + Math.cos(sleighX * 0.022 - t) * 1.2;
+  const sleighY = seaTopBase + sleighWave - 2;
+  const tilt = Math.cos(sleighX * 0.042 + t * 1.35) * 0.05;
 
-  drawThousandSunny(ctx, shipX, shipY, tilt);
+  drawSantaSleighAndReindeer(ctx, sleighX, sleighY, tilt, t * 2.6);
 
   seaFrameId = window.requestAnimationFrame(stepSeaProgress);
 }
