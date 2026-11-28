@@ -585,147 +585,285 @@ const musicBtn = document.getElementById("toggleMusic");
 let soundMuted = false;
 let audioCtx = null;
 
-/* Catálogo amplio de guiños de One Piece (frutas, enemigos, Wano, Oden, hijo de Oden, etc.) */
-const onePieceConfettiSvgs = [
-  // 1. Sombrero de paja de Luffy
-  `<svg viewBox="0 0 64 64" fill="none">
-    <ellipse cx="32" cy="40" rx="26" ry="10" fill="#f3c64f" stroke="#2f1a0f" stroke-width="3.2"/>
-    <path d="M13 38C13 21 21 14 32 14C43 14 51 21 51 38" fill="#f6cf62" stroke="#2f1a0f" stroke-width="3.2"/>
-    <path d="M13 34H51V41H13Z" fill="#d92b3a" stroke="#2f1a0f" stroke-width="2.5"/>
-    <path d="M22 21L25 27M32 18V25M41 21L38 27M39 42L44 45M43 40L40 46" stroke="#2f1a0f" stroke-width="2.5" stroke-linecap="round"/>
-  </svg>`,
-  // 2. Tres espadas de Zoro
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M16 49L44 12" stroke="#cbd5e1" stroke-width="3.2" stroke-linecap="round"/>
-    <path d="M21 45L49 23" stroke="#cbd5e1" stroke-width="3.2" stroke-linecap="round"/>
-    <path d="M25 50L53 35" stroke="#cbd5e1" stroke-width="3.2" stroke-linecap="round"/>
-    <path d="M36 22L48 11" stroke="#f8fafc" stroke-width="6" stroke-linecap="round"/>
-    <path d="M36 22L48 11" stroke="#dc2626" stroke-width="2.2" stroke-dasharray="3 3"/>
-    <path d="M40 31L53 21" stroke="#3b82f6" stroke-width="6" stroke-linecap="round"/>
-    <path d="M42 41L56 34" stroke="#7c3aed" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="35" cy="23" r="4" fill="#f0c66c" stroke="#1e293b" stroke-width="2.2"/>
-    <circle cx="39" cy="32" r="4" fill="#f0c66c" stroke="#1e293b" stroke-width="2.2"/>
-    <circle cx="41" cy="41" r="4" fill="#f0c66c" stroke="#1e293b" stroke-width="2.2"/>
-  </svg>`,
-  // 3. Sombrero de Ace
-  `<svg viewBox="0 0 64 64" fill="none">
-    <ellipse cx="32" cy="40" rx="25" ry="9" fill="#ef7838" stroke="#2c170f" stroke-width="3.2"/>
-    <path d="M15 39L19 17C20 14 26 16 32 16C38 16 44 14 45 17L49 39" fill="#f48444" stroke="#2c170f" stroke-width="3.2"/>
-    <circle cx="25" cy="35" r="5.5" fill="#fff8ea" stroke="#2c170f" stroke-width="2.2"/>
-    <circle cx="25" cy="35" r="3.4" fill="#38bdf8"/>
-    <circle cx="39" cy="35" r="5.5" fill="#fff8ea" stroke="#2c170f" stroke-width="2.2"/>
-    <circle cx="39" cy="35" r="3.4" fill="#38bdf8"/>
-    <circle cx="32" cy="36" r="3.2" fill="#dc2626" stroke="#2c170f" stroke-width="2"/>
-    <path d="M22 49C22 49 27 56 32 56C37 56 42 49 42 49" stroke="#2c170f" stroke-width="2.6"/>
-    <circle cx="42" cy="54" r="5.5" fill="#fff8ea" stroke="#2c170f" stroke-width="2.2"/>
-  </svg>`,
-  // 4. Calzones y pose SUUUPERRR de Franky
-  `<svg viewBox="0 0 64 64" fill="none">
-    <rect x="18" y="16" width="28" height="24" rx="3" fill="#42b4d6" stroke="#18222c" stroke-width="3.2"/>
-    <path d="M32 19L34.5 25L41 25.5L36 29.8L37.5 36L32 32.5L26.5 36L28 29.8L23 25.5L29.5 25L32 19Z" fill="#2563eb" stroke="#18222c" stroke-width="1.8"/>
-    <rect x="19" y="40" width="12" height="10" rx="2" fill="#0284c7" stroke="#18222c" stroke-width="2.5"/>
-    <rect x="33" y="40" width="12" height="10" rx="2" fill="#0284c7" stroke="#18222c" stroke-width="2.5"/>
-    <path d="M13 15C13 10 20 10 21 16H13ZM51 15C51 10 44 10 43 16H51Z" fill="#e11d48" stroke="#18222c" stroke-width="2.5"/>
-    <rect x="21" y="50" width="8" height="7" rx="2" fill="#f3cfa8" stroke="#18222c" stroke-width="2.2"/>
-    <rect x="35" y="50" width="8" height="7" rx="2" fill="#f3cfa8" stroke="#18222c" stroke-width="2.2"/>
-  </svg>`,
-  // 5. Gorro de Chopper
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M16 14C11 14 10 22 15 25L20 27" stroke="#5c3a21" stroke-width="3.8" stroke-linecap="round"/>
-    <path d="M48 14C53 14 54 22 49 25L44 27" stroke="#5c3a21" stroke-width="3.8" stroke-linecap="round"/>
-    <path d="M15 41C15 24 23 18 32 18C41 18 49 24 49 41L53 50L45 48L32 42L19 48L11 50L15 41Z" fill="#38bdf8" stroke="#1e293b" stroke-width="3.2"/>
-    <circle cx="32" cy="31" r="9.5" fill="#fb7185" stroke="#1e293b" stroke-width="2.5"/>
-    <path d="M30.5 25.5H33.5V29.5H37.5V32.5H33.5V36.5H30.5V32.5H26.5V29.5H30.5V25.5Z" fill="#ffffff"/>
-  </svg>`,
-  // 6. Brazos y flor de sakura de Robin
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M32 22C34 16 34 11 32 9C30 11 30 16 32 22Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
-    <path d="M27 24C21 20 17 20 16 23C18 25 22 26 27 24Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
-    <path d="M37 24C43 20 47 20 48 23C46 25 42 26 37 24Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
-    <path d="M29 28C25 32 25 35 28 36C30 34 31 31 29 28Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
-    <path d="M35 28C39 32 39 35 36 36C34 34 33 31 35 28Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
-    <path d="M12 53L48 28C51 26 54 29 51 32L18 57" fill="#ecc6a8" stroke="#2b1d24" stroke-width="2.8" stroke-linejoin="round"/>
-    <path d="M52 53L16 28C13 26 10 29 13 32L46 57" fill="#ecc6a8" stroke="#2b1d24" stroke-width="2.8" stroke-linejoin="round"/>
-  </svg>`,
-  // 7. Fruta del Diablo de fuego / Mera Mera
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M32 16C34 10 39 8 42 10" stroke="#4d7c0f" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M32 16C26 10 21 12 20 16" stroke="#65a30d" stroke-width="3" stroke-linecap="round"/>
-    <path d="M32 17C20 17 13 26 14 38C15 49 23 55 32 55C41 55 49 49 50 38C51 26 44 17 32 17Z" fill="#f97316" stroke="#2c1608" stroke-width="3"/>
-    <path d="M21 26C25 30 23 35 19 37M32 22C29 28 35 32 32 40M43 26C39 31 42 36 45 38M22 45C27 43 30 48 34 46M38 45C41 43 44 46 45 48" stroke="#fde047" stroke-width="2.4" stroke-linecap="round"/>
-  </svg>`,
-  // 8. Fruta del Diablo morada (Yami / Hito)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M32 15C30 9 25 8 22 10" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"/>
-    <circle cx="32" cy="36" r="19" fill="#7e22ce" stroke="#1e102e" stroke-width="3.2"/>
-    <path d="M20 26C24 29 22 34 18 36M32 21C35 27 30 32 34 39M44 27C40 31 43 36 46 38M23 45C28 43 31 48 36 46" stroke="#d8b4fe" stroke-width="2.4" stroke-linecap="round"/>
-  </svg>`,
-  // 9. Donquixote Doflamingo (lentes rosas y abrigo de plumas)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M12 24H52M14 24L20 38H29L32 28L35 38H44L50 24" stroke="#ec4899" stroke-width="3.2" stroke-linejoin="round"/>
-    <path d="M15 24L20 37H28L31 27H33L36 37H44L49 24H15Z" fill="#f472b6" fill-opacity="0.72"/>
-    <path d="M12 45L22 41L18 50L28 46L24 54L34 49L32 56L42 50L38 56L48 48L44 43L52 44" fill="#fdf2f8" stroke="#be185d" stroke-width="2.2" stroke-linejoin="round"/>
-  </svg>`,
-  // 10. Barbanegra / Marshall D. Teach (sombrero pirata y cicatriz/oscuridad)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M10 38C16 20 48 20 54 38C43 34 21 34 10 38Z" fill="#1e1b24" stroke="#09080c" stroke-width="3"/>
-    <circle cx="32" cy="26" r="5" fill="#f8fafc" stroke="#1e1b24" stroke-width="2"/>
-    <path d="M22 44L30 52M30 44L22 52M34 44L42 52M42 44L34 52" stroke="#f59e0b" stroke-width="2.6" stroke-linecap="round"/>
-  </svg>`,
-  // 11. Big Mom (sombrero napoleón rosa con lazo y corona)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M12 42C12 22 22 15 34 16C45 17 53 26 52 42H12Z" fill="#f472b6" stroke="#3b0d24" stroke-width="3"/>
-    <path d="M24 16L27 9L32 14L37 9L40 16" fill="#fbbf24" stroke="#3b0d24" stroke-width="2.2" stroke-linejoin="round"/>
-    <circle cx="25" cy="31" r="3" fill="#fff"/>
-    <circle cx="39" cy="31" r="3" fill="#fff"/>
-    <path d="M23 38C28 42 36 42 41 38" stroke="#3b0d24" stroke-width="2.5" stroke-linecap="round"/>
-  </svg>`,
-  // 12. Kaido (cuernos de oni y kanabo / garrote con picos)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M20 26C13 20 11 11 16 8C19 14 22 18 25 22" fill="#e2e8f0" stroke="#1e293b" stroke-width="2.6" stroke-linejoin="round"/>
-    <path d="M44 26C51 20 53 11 48 8C45 14 42 18 39 22" fill="#e2e8f0" stroke="#1e293b" stroke-width="2.6" stroke-linejoin="round"/>
-    <path d="M16 48L48 16" stroke="#1e293b" stroke-width="8" stroke-linecap="round"/>
-    <path d="M16 48L48 16" stroke="#475569" stroke-width="4" stroke-linecap="round"/>
-    <path d="M26 38L23 33M33 31L30 26M40 24L37 19M35 33L40 36M42 26L47 29" stroke="#fbbf24" stroke-width="2.4" stroke-linecap="round"/>
-  </svg>`,
-  // 13. Kozuki Oden (espadas Ame no Habakiri y Enma + oden)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M14 48L48 14" stroke="#e2e8f0" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M18 14L48 48" stroke="#7c3aed" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M36 22L50 10" stroke="#d97706" stroke-width="5.5" stroke-linecap="round"/>
-    <path d="M36 42L50 54" stroke="#9333ea" stroke-width="5.5" stroke-linecap="round"/>
-    <circle cx="32" cy="32" r="7" fill="#f59e0b" stroke="#29170a" stroke-width="2.4"/>
-  </svg>`,
-  // 14. Yamato / Hijo de Oden (cuernos azul y blanco + cascabel)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M19 32C12 24 11 13 17 10C20 17 22 22 25 27" fill="#38bdf8" stroke="#1e293b" stroke-width="2.6" stroke-linejoin="round"/>
-    <path d="M45 32C52 24 53 13 47 10C44 17 42 22 39 27" fill="#f8fafc" stroke="#1e293b" stroke-width="2.6" stroke-linejoin="round"/>
-    <circle cx="32" cy="40" r="10" fill="#fbbf24" stroke="#1e293b" stroke-width="2.8"/>
-    <path d="M22 39H42M32 40V49" stroke="#1e293b" stroke-width="2.5"/>
-    <circle cx="32" cy="43" r="2.2" fill="#dc2626"/>
-  </svg>`,
-  // 15. Wano Kuni (flor de cerezo / sakura en blanco y rosa)
-  `<svg viewBox="0 0 64 64" fill="none">
-    <path d="M32 22C35 14 35 8 32 6C29 8 29 14 32 22Z" fill="#fbcfe8" stroke="#3b1d2a" stroke-width="2.4"/>
-    <path d="M26 25C18 19 12 20 11 24C14 27 20 28 26 25Z" fill="#f9a8d4" stroke="#3b1d2a" stroke-width="2.4"/>
-    <path d="M38 25C46 19 52 20 53 24C50 27 44 28 38 25Z" fill="#f9a8d4" stroke="#3b1d2a" stroke-width="2.4"/>
-    <path d="M28 31C22 38 23 45 27 47C30 43 31 37 28 31Z" fill="#fbcfe8" stroke="#3b1d2a" stroke-width="2.4"/>
-    <path d="M36 31C42 38 41 45 37 47C34 43 33 37 36 31Z" fill="#fbcfe8" stroke="#3b1d2a" stroke-width="2.4"/>
-    <circle cx="32" cy="28" r="3.5" fill="#fb7185"/>
-  </svg>`
+/* Tipos de guiños de One Piece dibujados directamente en Canvas */
+const onePieceWinkKinds = [
+  "luffyHat",
+  "zoroSwords",
+  "aceHat",
+  "franky",
+  "chopper",
+  "robinSakura",
+  "fruitFire",
+  "fruitPurple",
+  "doflamingo",
+  "blackbeard",
+  "bigmom",
+  "kaido",
+  "oden",
+  "yamato",
+  "wanoFlower"
 ];
-
-const onePieceStickerImages = onePieceConfettiSvgs.map(svgStr => {
-  const img = new Image();
-  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
-  return img;
-});
 
 function pickSmallMixedStickerSize(){
   const roll = Math.random();
-  if(roll < 0.45) return 16 + Math.random() * 5;   // pequeños: ~16-21px
-  if(roll < 0.82) return 22 + Math.random() * 6;   // medianos-chicos: ~22-28px
-  return 29 + Math.random() * 6;                   // un poco más grandes: ~29-35px
+  if(roll < 0.45) return 16 + Math.random() * 5;
+  if(roll < 0.82) return 22 + Math.random() * 6;
+  return 29 + Math.random() * 6;
+}
+
+function drawOnePieceConfettiItem(ctx, p){
+  const s = p.size;
+  const h = s * 0.5;
+
+  ctx.beginPath();
+  ctx.arc(0, 0, s * 0.54, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(255, 252, 242, 0.94)";
+  ctx.fill();
+  ctx.lineWidth = Math.max(1.2, s * 0.05);
+  ctx.strokeStyle = "rgba(240, 198, 108, 0.9)";
+  ctx.stroke();
+
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  switch(p.kind){
+    case "luffyHat": {
+      ctx.fillStyle = "#f3c64f";
+      ctx.strokeStyle = "#2f1a0f";
+      ctx.lineWidth = s * 0.055;
+      ctx.beginPath();
+      ctx.ellipse(0, h * 0.16, h * 0.78, h * 0.28, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#f6cf62";
+      ctx.beginPath();
+      ctx.arc(0, h * 0.08, h * 0.46, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#d92b3a";
+      ctx.fillRect(-h * 0.45, -h * 0.04, h * 0.9, h * 0.16);
+      break;
+    }
+    case "zoroSwords": {
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = s * 0.05;
+      for(let k = -1; k <= 1; k++){
+        ctx.beginPath();
+        ctx.moveTo(-h * 0.55, k * h * 0.24);
+        ctx.lineTo(h * 0.55, -k * h * 0.24);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#f0c66c";
+      ctx.beginPath();
+      ctx.arc(h * 0.22, 0, h * 0.14, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "aceHat": {
+      ctx.fillStyle = "#ef7838";
+      ctx.strokeStyle = "#2c170f";
+      ctx.lineWidth = s * 0.055;
+      ctx.beginPath();
+      ctx.ellipse(0, h * 0.14, h * 0.75, h * 0.26, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#f48444";
+      ctx.beginPath();
+      ctx.moveTo(-h * 0.42, h * 0.12);
+      ctx.lineTo(-h * 0.34, -h * 0.38);
+      ctx.lineTo(h * 0.34, -h * 0.38);
+      ctx.lineTo(h * 0.42, h * 0.12);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.beginPath();
+      ctx.arc(-h * 0.18, 0, h * 0.1, 0, Math.PI * 2);
+      ctx.arc(h * 0.18, 0, h * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "franky": {
+      ctx.fillStyle = "#42b4d6";
+      ctx.strokeStyle = "#18222c";
+      ctx.lineWidth = s * 0.055;
+      ctx.fillRect(-h * 0.42, -h * 0.42, h * 0.84, h * 0.84);
+      ctx.strokeRect(-h * 0.42, -h * 0.42, h * 0.84, h * 0.84);
+      ctx.fillStyle = "#2563eb";
+      ctx.beginPath();
+      ctx.arc(0, 0, h * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "chopper": {
+      ctx.fillStyle = "#38bdf8";
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = s * 0.055;
+      ctx.beginPath();
+      ctx.arc(0, h * 0.05, h * 0.54, Math.PI, 0);
+      ctx.lineTo(h * 0.65, h * 0.38);
+      ctx.lineTo(-h * 0.65, h * 0.38);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#fb7185";
+      ctx.beginPath();
+      ctx.arc(0, -h * 0.06, h * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "robinSakura":
+    case "wanoFlower": {
+      const petalFill = p.kind === "wanoFlower" ? "#fbcfe8" : "#f9a8d4";
+      ctx.fillStyle = petalFill;
+      ctx.strokeStyle = "#3b1d2a";
+      ctx.lineWidth = s * 0.045;
+      for(let k = 0; k < 5; k++){
+        const a = (k / 5) * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * h * 0.34, Math.sin(a) * h * 0.34, h * 0.24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#fb7185";
+      ctx.beginPath();
+      ctx.arc(0, 0, h * 0.14, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "fruitFire":
+    case "fruitPurple": {
+      const fruitFill = p.kind === "fruitFire" ? "#f97316" : "#7e22ce";
+      const swirlColor = p.kind === "fruitFire" ? "#fde047" : "#d8b4fe";
+      ctx.strokeStyle = "#16a34a";
+      ctx.lineWidth = s * 0.06;
+      ctx.beginPath();
+      ctx.moveTo(0, -h * 0.52);
+      ctx.quadraticCurveTo(h * 0.25, -h * 0.8, h * 0.42, -h * 0.62);
+      ctx.stroke();
+
+      ctx.fillStyle = fruitFill;
+      ctx.strokeStyle = "#1e102e";
+      ctx.lineWidth = s * 0.055;
+      ctx.beginPath();
+      ctx.arc(0, h * 0.05, h * 0.54, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = swirlColor;
+      ctx.lineWidth = s * 0.045;
+      ctx.beginPath();
+      ctx.arc(-h * 0.15, h * 0.05, h * 0.16, 0, Math.PI * 1.4);
+      ctx.moveTo(h * 0.18, -h * 0.1);
+      ctx.lineTo(h * 0.22, h * 0.22);
+      ctx.stroke();
+      break;
+    }
+    case "doflamingo": {
+      ctx.fillStyle = "#f472b6";
+      ctx.strokeStyle = "#be185d";
+      ctx.lineWidth = s * 0.055;
+      ctx.beginPath();
+      ctx.moveTo(-h * 0.72, -h * 0.25);
+      ctx.lineTo(h * 0.72, -h * 0.25);
+      ctx.lineTo(h * 0.5, h * 0.25);
+      ctx.lineTo(h * 0.12, h * 0.25);
+      ctx.lineTo(0, -h * 0.05);
+      ctx.lineTo(-h * 0.12, h * 0.25);
+      ctx.lineTo(-h * 0.5, h * 0.25);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      break;
+    }
+    case "blackbeard": {
+      ctx.fillStyle = "#1e1b24";
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = s * 0.05;
+      ctx.beginPath();
+      ctx.arc(0, 0, h * 0.54, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(-h * 0.22, -h * 0.18);
+      ctx.lineTo(h * 0.22, h * 0.22);
+      ctx.moveTo(h * 0.22, -h * 0.18);
+      ctx.lineTo(-h * 0.22, h * 0.22);
+      ctx.stroke();
+      break;
+    }
+    case "bigmom": {
+      ctx.fillStyle = "#f472b6";
+      ctx.strokeStyle = "#3b0d24";
+      ctx.lineWidth = s * 0.055;
+      ctx.beginPath();
+      ctx.arc(0, h * 0.08, h * 0.56, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(0, -h * 0.46, h * 0.16, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "kaido":
+    case "yamato": {
+      const leftHorn = p.kind === "yamato" ? "#38bdf8" : "#e2e8f0";
+      const rightHorn = p.kind === "yamato" ? "#f8fafc" : "#e2e8f0";
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = s * 0.05;
+
+      ctx.fillStyle = leftHorn;
+      ctx.beginPath();
+      ctx.moveTo(-h * 0.22, h * 0.1);
+      ctx.quadraticCurveTo(-h * 0.7, -h * 0.2, -h * 0.55, -h * 0.65);
+      ctx.quadraticCurveTo(-h * 0.32, -h * 0.35, -h * 0.12, h * 0.1);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = rightHorn;
+      ctx.beginPath();
+      ctx.moveTo(h * 0.22, h * 0.1);
+      ctx.quadraticCurveTo(h * 0.7, -h * 0.2, h * 0.55, -h * 0.65);
+      ctx.quadraticCurveTo(h * 0.32, -h * 0.35, h * 0.12, h * 0.1);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(0, h * 0.25, h * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      break;
+    }
+    case "oden": {
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = s * 0.07;
+      ctx.beginPath();
+      ctx.moveTo(-h * 0.55, -h * 0.55);
+      ctx.lineTo(h * 0.55, h * 0.55);
+      ctx.moveTo(h * 0.55, -h * 0.55);
+      ctx.lineTo(-h * 0.55, h * 0.55);
+      ctx.stroke();
+
+      ctx.fillStyle = "#f59e0b";
+      ctx.beginPath();
+      ctx.arc(0, 0, h * 0.22, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+  }
+  ctx.restore();
 }
 
 function getAudioContext(){
@@ -952,7 +1090,7 @@ function launchCelebrationConfetti(){
     const angle = (i / 44) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
     const speed = 2.6 + Math.random() * 4.5;
     return {
-      kind: "rect",
+      isSticker: false,
       x: cx + (Math.random() - 0.5) * 28,
       y: cy + (Math.random() - 0.5) * 28,
       vx: Math.cos(angle) * speed,
@@ -971,10 +1109,10 @@ function launchCelebrationConfetti(){
     const angle = Math.random() * Math.PI * 2;
     const speed = 2.0 + Math.random() * 4.0;
     const size = pickSmallMixedStickerSize();
-    const randomImg = onePieceStickerImages[Math.floor(Math.random() * onePieceStickerImages.length)];
+    const kind = onePieceWinkKinds[Math.floor(Math.random() * onePieceWinkKinds.length)];
     return {
-      kind: "sticker",
-      img: randomImg,
+      isSticker: true,
+      kind,
       x: cx + (Math.random() - 0.5) * 32,
       y: cy + (Math.random() - 0.5) * 32,
       vx: Math.cos(angle) * speed,
@@ -1002,10 +1140,10 @@ function launchCelebrationConfetti(){
       const p = confettiPieces[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += p.kind === "sticker" ? 0.068 : 0.085;
+      p.vy += p.isSticker ? 0.068 : 0.085;
       p.vx *= 0.986;
       p.rot += p.vRot;
-      p.alpha -= p.kind === "sticker" ? 0.0085 : 0.011;
+      p.alpha -= p.isSticker ? 0.0085 : 0.011;
 
       if(p.alpha > 0.02){
         alive++;
@@ -1014,15 +1152,8 @@ function launchCelebrationConfetti(){
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
 
-        if(p.kind === "sticker" && p.img && p.img.complete){
-          ctx.beginPath();
-          ctx.arc(0, 0, p.size * 0.52, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255, 252, 242, 0.92)";
-          ctx.fill();
-          ctx.lineWidth = Math.max(1.1, p.size * 0.045);
-          ctx.strokeStyle = "rgba(240, 198, 108, 0.85)";
-          ctx.stroke();
-          ctx.drawImage(p.img, -p.size / 2, -p.size / 2, p.size, p.size);
+        if(p.isSticker){
+          drawOnePieceConfettiItem(ctx, p);
         }else{
           ctx.fillStyle = p.color;
           ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
