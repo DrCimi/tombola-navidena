@@ -286,8 +286,8 @@ select:disabled{opacity:.65}
 .surprise-pod{
   position:relative;
   z-index:123;
-  width:min(90vw, 340px);
-  min-height:310px;
+  width:min(86vw, 310px);
+  height:min(86vw, 310px);
   display:grid;
   place-items:center;
   transform:translateY(90px) scale(0.24);
@@ -301,9 +301,9 @@ select:disabled{opacity:.65}
 .surprise-core{
   position:relative;
   z-index:2;
-  width:94%;
-  min-height:196px;
-  padding:16px 14px;
+  width:90%;
+  min-height:165px;
+  padding:20px 18px;
   border-radius:24px;
   background:linear-gradient(155deg, rgba(16, 54, 82, 0.96), rgba(14, 42, 64, 0.98));
   border:3px solid var(--gold);
@@ -313,7 +313,7 @@ select:disabled{opacity:.65}
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  gap:5px;
+  gap:6px;
   transform:scale(0.65);
   opacity:0;
   transition:transform 0.45s cubic-bezier(0.2, 1.35, 0.35, 1) 0.28s, opacity 0.3s ease 0.25s;
@@ -322,50 +322,6 @@ select:disabled{opacity:.65}
   transform:scale(1);
   opacity:1;
 }
-
-/* Guiños pequeños de One Piece al abrir la bola */
-.op-winks-row{
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:5px;
-  margin-bottom:2px;
-  max-width:100%;
-}
-.op-mini-wink{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-  padding:2px 7px;
-  border-radius:999px;
-  background:rgba(255, 255, 255, 0.09);
-  border:1px solid rgba(240, 198, 108, 0.42);
-  transform:scale(0.75) translateY(4px);
-  opacity:0;
-  transition:transform 0.35s cubic-bezier(0.2, 1.4, 0.35, 1), opacity 0.3s ease;
-}
-.surprise-pod.open .op-mini-wink{
-  transform:scale(1) translateY(0);
-  opacity:1;
-}
-.surprise-pod.open .op-mini-wink:nth-child(1){transition-delay:0.32s}
-.surprise-pod.open .op-mini-wink:nth-child(2){transition-delay:0.39s}
-.surprise-pod.open .op-mini-wink:nth-child(3){transition-delay:0.46s}
-.op-mini-wink svg{
-  width:19px;
-  height:19px;
-  flex-shrink:0;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.45));
-}
-.op-mini-text{
-  font-size:0.65rem;
-  font-weight:700;
-  letter-spacing:0.02em;
-  color:#ffe9a8;
-  line-height:1.1;
-  white-space:nowrap;
-}
-
 .surprise-tag{
   font-size:0.72rem;
   font-weight:800;
@@ -388,7 +344,7 @@ select:disabled{opacity:.65}
   font-weight:600;
 }
 .surprise-close{
-  margin-top:6px;
+  margin-top:8px;
   padding:7px 18px;
   font-size:0.88rem;
   background:linear-gradient(135deg,#d6344d,#8e1b30);
@@ -424,11 +380,11 @@ select:disabled{opacity:.65}
   transform:translateY(0) rotate(0deg);
 }
 .surprise-pod.open .shell-top{
-  transform:translateY(-92px) rotate(-14deg);
+  transform:translateY(-86px) rotate(-14deg);
   opacity:0;
 }
 .surprise-pod.open .shell-bottom{
-  transform:translateY(92px) rotate(14deg);
+  transform:translateY(86px) rotate(14deg);
   opacity:0;
 }
 
@@ -522,8 +478,6 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 @media(max-width:430px){
   main{padding:14px 10px 68px}
   .panel{border-radius:22px}
-  .op-mini-wink svg{width:16px;height:16px}
-  .op-mini-text{font-size:0.6rem}
 }
 </style>
 </head>
@@ -585,7 +539,6 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
  <div class="surprise-pod" id="surprisePod">
   <div class="shell-half shell-top" id="shellTop"></div>
   <div class="surprise-core">
-   <div class="op-winks-row" id="opWinksRow"></div>
    <div class="surprise-tag">🎁 Tu regalo es para</div>
    <div class="surprise-winner" id="surpriseWinner"></div>
    <div class="surprise-meta" id="surpriseMeta"></div>
@@ -620,7 +573,7 @@ let animFrameId = null;
 let surpriseTimer = null;
 let glintTimer = null;
 
-/* Nieve constante con acumulación en la parte baja y confeti ligero */
+/* Nieve constante con acumulación en la parte baja y confeti de celebración */
 let snowflakes = [];
 let snowPile = [];
 let snowFrameId = null;
@@ -632,91 +585,75 @@ const musicBtn = document.getElementById("toggleMusic");
 let soundMuted = false;
 let audioCtx = null;
 
-/* Guiños pequeños de One Piece al abrir la bola */
-const onePieceWinks = [
-  {
-    caption: "Rey Pirata",
-    svg: `<svg viewBox="0 0 64 64" fill="none">
-      <ellipse cx="32" cy="40" rx="26" ry="10" fill="#f3c64f" stroke="#3d2314" stroke-width="3"/>
-      <path d="M13 38C13 21 21 14 32 14C43 14 51 21 51 38" fill="#f6cf62" stroke="#3d2314" stroke-width="3"/>
-      <path d="M13 34H51V41H13Z" fill="#d92b3a" stroke="#3d2314" stroke-width="2.5"/>
-      <path d="M22 21L25 27M32 18V25M41 21L38 27M39 42L44 45M43 40L40 46" stroke="#3d2314" stroke-width="2.5" stroke-linecap="round"/>
-    </svg>`
-  },
-  {
-    caption: "Santoryu",
-    svg: `<svg viewBox="0 0 64 64" fill="none">
-      <path d="M18 48L44 12" stroke="#b8c4ce" stroke-width="3" stroke-linecap="round"/>
-      <path d="M22 44L49 23" stroke="#b8c4ce" stroke-width="3" stroke-linecap="round"/>
-      <path d="M25 49L53 35" stroke="#b8c4ce" stroke-width="3" stroke-linecap="round"/>
-      <path d="M36 22L48 11" stroke="#f7f9fc" stroke-width="5.5" stroke-linecap="round"/>
-      <path d="M36 22L48 11" stroke="#c83232" stroke-width="2" stroke-dasharray="3 3"/>
-      <path d="M40 31L53 21" stroke="#2f3e78" stroke-width="5.5" stroke-linecap="round"/>
-      <path d="M42 41L56 34" stroke="#3b2654" stroke-width="5.5" stroke-linecap="round"/>
-      <circle cx="35" cy="23" r="4" fill="#f0c66c" stroke="#222" stroke-width="2"/>
-      <circle cx="39" cy="32" r="4" fill="#f0c66c" stroke="#222" stroke-width="2"/>
-      <circle cx="41" cy="41" r="4" fill="#f0c66c" stroke="#222" stroke-width="2"/>
-    </svg>`
-  },
-  {
-    caption: "Mera Mera",
-    svg: `<svg viewBox="0 0 64 64" fill="none">
-      <ellipse cx="32" cy="40" rx="25" ry="9" fill="#ef7838" stroke="#2f1b12" stroke-width="3"/>
-      <path d="M15 39L19 17C20 14 26 16 32 16C38 16 44 14 45 17L49 39" fill="#f48444" stroke="#2f1b12" stroke-width="3"/>
-      <circle cx="25" cy="35" r="5.5" fill="#fff8ea" stroke="#2f1b12" stroke-width="2.2"/>
-      <circle cx="25" cy="35" r="3.4" fill="#4aa3df"/>
-      <circle cx="39" cy="35" r="5.5" fill="#fff8ea" stroke="#2f1b12" stroke-width="2.2"/>
-      <circle cx="39" cy="35" r="3.4" fill="#4aa3df"/>
-      <circle cx="32" cy="36" r="3.2" fill="#c92a2a" stroke="#2f1b12" stroke-width="2"/>
-      <path d="M22 49C22 49 27 56 32 56C37 56 42 49 42 49" stroke="#3d2314" stroke-width="2.5"/>
-      <circle cx="42" cy="54" r="5.5" fill="#fff8ea" stroke="#2f1b12" stroke-width="2.2"/>
-    </svg>`
-  },
-  {
-    caption: "SUUUPERRR!",
-    svg: `<svg viewBox="0 0 64 64" fill="none">
-      <rect x="18" y="16" width="28" height="24" rx="3" fill="#42b4d6" stroke="#1b2631" stroke-width="3"/>
-      <path d="M32 19L34.5 25L41 25.5L36 29.8L37.5 36L32 32.5L26.5 36L28 29.8L23 25.5L29.5 25L32 19Z" fill="#2b4c9e" stroke="#1b2631" stroke-width="1.8"/>
-      <rect x="19" y="40" width="12" height="10" rx="2" fill="#2d9cdb" stroke="#1b2631" stroke-width="2.5"/>
-      <rect x="33" y="40" width="12" height="10" rx="2" fill="#2d9cdb" stroke="#1b2631" stroke-width="2.5"/>
-      <path d="M13 15C13 10 20 10 21 16H13ZM51 15C51 10 44 10 43 16H51Z" fill="#d6344d" stroke="#1b2631" stroke-width="2.5"/>
-      <rect x="21" y="50" width="8" height="7" rx="2" fill="#f2c9a0" stroke="#1b2631" stroke-width="2.2"/>
-      <rect x="35" y="50" width="8" height="7" rx="2" fill="#f2c9a0" stroke="#1b2631" stroke-width="2.2"/>
-    </svg>`
-  },
-  {
-    caption: "Chopper",
-    svg: `<svg viewBox="0 0 64 64" fill="none">
-      <path d="M16 14C11 14 10 22 15 25L20 27" stroke="#5b3a24" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M48 14C53 14 54 22 49 25L44 27" stroke="#5b3a24" stroke-width="3.5" stroke-linecap="round"/>
-      <path d="M15 41C15 24 23 18 32 18C41 18 49 24 49 41L53 50L45 48L32 42L19 48L11 50L15 41Z" fill="#46b8e8" stroke="#1e293b" stroke-width="3"/>
-      <circle cx="32" cy="31" r="9.5" fill="#f4978e" stroke="#1e293b" stroke-width="2.5"/>
-      <path d="M30.5 25.5H33.5V29.5H37.5V32.5H33.5V36.5H30.5V32.5H26.5V29.5H30.5V25.5Z" fill="#ffffff"/>
-    </svg>`
-  },
-  {
-    caption: "Fleur",
-    svg: `<svg viewBox="0 0 64 64" fill="none">
-      <path d="M32 22C34 16 34 11 32 9C30 11 30 16 32 22Z" fill="#f7b2c4" stroke="#2d2026" stroke-width="2"/>
-      <path d="M27 24C21 20 17 20 16 23C18 25 22 26 27 24Z" fill="#f7b2c4" stroke="#2d2026" stroke-width="2"/>
-      <path d="M37 24C43 20 47 20 48 23C46 25 42 26 37 24Z" fill="#f7b2c4" stroke="#2d2026" stroke-width="2"/>
-      <path d="M29 28C25 32 25 35 28 36C30 34 31 31 29 28Z" fill="#f7b2c4" stroke="#2d2026" stroke-width="2"/>
-      <path d="M35 28C39 32 39 35 36 36C34 34 33 31 35 28Z" fill="#f7b2c4" stroke="#2d2026" stroke-width="2"/>
-      <path d="M12 53L48 28C51 26 54 29 51 32L18 57" fill="#e8c3a5" stroke="#2d2026" stroke-width="2.6" stroke-linejoin="round"/>
-      <path d="M52 53L16 28C13 26 10 29 13 32L46 57" fill="#e8c3a5" stroke="#2d2026" stroke-width="2.6" stroke-linejoin="round"/>
-    </svg>`
-  }
+/* Mini-stickers SVG de One Piece para disparar como confeti al abrir la bola */
+const onePieceConfettiSvgs = [
+  // 1. Sombrero de paja de Luffy
+  `<svg viewBox="0 0 64 64" fill="none">
+    <ellipse cx="32" cy="40" rx="26" ry="10" fill="#f3c64f" stroke="#2f1a0f" stroke-width="3.2"/>
+    <path d="M13 38C13 21 21 14 32 14C43 14 51 21 51 38" fill="#f6cf62" stroke="#2f1a0f" stroke-width="3.2"/>
+    <path d="M13 34H51V41H13Z" fill="#d92b3a" stroke="#2f1a0f" stroke-width="2.5"/>
+    <path d="M22 21L25 27M32 18V25M41 21L38 27M39 42L44 45M43 40L40 46" stroke="#2f1a0f" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>`,
+  // 2. Tres espadas de Zoro
+  `<svg viewBox="0 0 64 64" fill="none">
+    <path d="M16 49L44 12" stroke="#cbd5e1" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M21 45L49 23" stroke="#cbd5e1" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M25 50L53 35" stroke="#cbd5e1" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M36 22L48 11" stroke="#f8fafc" stroke-width="6" stroke-linecap="round"/>
+    <path d="M36 22L48 11" stroke="#dc2626" stroke-width="2.2" stroke-dasharray="3 3"/>
+    <path d="M40 31L53 21" stroke="#3b82f6" stroke-width="6" stroke-linecap="round"/>
+    <path d="M42 41L56 34" stroke="#7c3aed" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="35" cy="23" r="4" fill="#f0c66c" stroke="#1e293b" stroke-width="2.2"/>
+    <circle cx="39" cy="32" r="4" fill="#f0c66c" stroke="#1e293b" stroke-width="2.2"/>
+    <circle cx="41" cy="41" r="4" fill="#f0c66c" stroke="#1e293b" stroke-width="2.2"/>
+  </svg>`,
+  // 3. Sombrero de Ace
+  `<svg viewBox="0 0 64 64" fill="none">
+    <ellipse cx="32" cy="40" rx="25" ry="9" fill="#ef7838" stroke="#2c170f" stroke-width="3.2"/>
+    <path d="M15 39L19 17C20 14 26 16 32 16C38 16 44 14 45 17L49 39" fill="#f48444" stroke="#2c170f" stroke-width="3.2"/>
+    <circle cx="25" cy="35" r="5.5" fill="#fff8ea" stroke="#2c170f" stroke-width="2.2"/>
+    <circle cx="25" cy="35" r="3.4" fill="#38bdf8"/>
+    <circle cx="39" cy="35" r="5.5" fill="#fff8ea" stroke="#2c170f" stroke-width="2.2"/>
+    <circle cx="39" cy="35" r="3.4" fill="#38bdf8"/>
+    <circle cx="32" cy="36" r="3.2" fill="#dc2626" stroke="#2c170f" stroke-width="2"/>
+    <path d="M22 49C22 49 27 56 32 56C37 56 42 49 42 49" stroke="#2c170f" stroke-width="2.6"/>
+    <circle cx="42" cy="54" r="5.5" fill="#fff8ea" stroke="#2c170f" stroke-width="2.2"/>
+  </svg>`,
+  // 4. Calzones y pose SUUUPERRR de Franky
+  `<svg viewBox="0 0 64 64" fill="none">
+    <rect x="18" y="16" width="28" height="24" rx="3" fill="#42b4d6" stroke="#18222c" stroke-width="3.2"/>
+    <path d="M32 19L34.5 25L41 25.5L36 29.8L37.5 36L32 32.5L26.5 36L28 29.8L23 25.5L29.5 25L32 19Z" fill="#2563eb" stroke="#18222c" stroke-width="1.8"/>
+    <rect x="19" y="40" width="12" height="10" rx="2" fill="#0284c7" stroke="#18222c" stroke-width="2.5"/>
+    <rect x="33" y="40" width="12" height="10" rx="2" fill="#0284c7" stroke="#18222c" stroke-width="2.5"/>
+    <path d="M13 15C13 10 20 10 21 16H13ZM51 15C51 10 44 10 43 16H51Z" fill="#e11d48" stroke="#18222c" stroke-width="2.5"/>
+    <rect x="21" y="50" width="8" height="7" rx="2" fill="#f3cfa8" stroke="#18222c" stroke-width="2.2"/>
+    <rect x="35" y="50" width="8" height="7" rx="2" fill="#f3cfa8" stroke="#18222c" stroke-width="2.2"/>
+  </svg>`,
+  // 5. Gorro de Chopper
+  `<svg viewBox="0 0 64 64" fill="none">
+    <path d="M16 14C11 14 10 22 15 25L20 27" stroke="#5c3a21" stroke-width="3.8" stroke-linecap="round"/>
+    <path d="M48 14C53 14 54 22 49 25L44 27" stroke="#5c3a21" stroke-width="3.8" stroke-linecap="round"/>
+    <path d="M15 41C15 24 23 18 32 18C41 18 49 24 49 41L53 50L45 48L32 42L19 48L11 50L15 41Z" fill="#38bdf8" stroke="#1e293b" stroke-width="3.2"/>
+    <circle cx="32" cy="31" r="9.5" fill="#fb7185" stroke="#1e293b" stroke-width="2.5"/>
+    <path d="M30.5 25.5H33.5V29.5H37.5V32.5H33.5V36.5H30.5V32.5H26.5V29.5H30.5V25.5Z" fill="#ffffff"/>
+  </svg>`,
+  // 6. Brazos y flor de sakura de Robin
+  `<svg viewBox="0 0 64 64" fill="none">
+    <path d="M32 22C34 16 34 11 32 9C30 11 30 16 32 22Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
+    <path d="M27 24C21 20 17 20 16 23C18 25 22 26 27 24Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
+    <path d="M37 24C43 20 47 20 48 23C46 25 42 26 37 24Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
+    <path d="M29 28C25 32 25 35 28 36C30 34 31 31 29 28Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
+    <path d="M35 28C39 32 39 35 36 36C34 34 33 31 35 28Z" fill="#f9a8d4" stroke="#2b1d24" stroke-width="2.2"/>
+    <path d="M12 53L48 28C51 26 54 29 51 32L18 57" fill="#ecc6a8" stroke="#2b1d24" stroke-width="2.8" stroke-linejoin="round"/>
+    <path d="M52 53L16 28C13 26 10 29 13 32L46 57" fill="#ecc6a8" stroke="#2b1d24" stroke-width="2.8" stroke-linejoin="round"/>
+  </svg>`
 ];
 
-function pickSmallOnePieceWinks(){
-  const rowEl = document.getElementById("opWinksRow");
-  if(!rowEl || !onePieceWinks.length) return;
-  const shuffled = [...onePieceWinks].sort(() => Math.random() - 0.5);
-  const picks = shuffled.slice(0, 3);
-  rowEl.innerHTML = picks
-    .map(w => `<span class="op-mini-wink">${w.svg}<span class="op-mini-text">${esc(w.caption)}</span></span>`)
-    .join("");
-}
+const onePieceStickerImages = onePieceConfettiSvgs.map(svgStr => {
+  const img = new Image();
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
+  return img;
+});
 
 function getAudioContext(){
   if(soundMuted) return null;
@@ -929,7 +866,7 @@ function initSnow(){
 
 const confettiPalette = ["#e11d48", "#10b981", "#fbbf24", "#38bdf8", "#f8fafc", "#f59e0b"];
 
-function launchLightConfetti(){
+function launchCelebrationConfetti(){
   const canvas = document.getElementById("confettiCanvas");
   if(!canvas) return;
   canvas.width = window.innerWidth;
@@ -937,22 +874,45 @@ function launchLightConfetti(){
 
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
-  confettiPieces = Array.from({ length: 42 }, (_, i) => {
+
+  const colorPieces = Array.from({ length: 42 }, (_, i) => {
     const angle = (i / 42) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-    const speed = 2.4 + Math.random() * 4.2;
+    const speed = 2.6 + Math.random() * 4.4;
     return {
-      x: cx + (Math.random() - 0.5) * 30,
-      y: cy + (Math.random() - 0.5) * 30,
+      kind: "rect",
+      x: cx + (Math.random() - 0.5) * 28,
+      y: cy + (Math.random() - 0.5) * 28,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 1.8,
+      vy: Math.sin(angle) * speed - 2.1,
       w: 5 + Math.random() * 4,
       h: 3 + Math.random() * 3,
       rot: Math.random() * Math.PI * 2,
-      vRot: (Math.random() - 0.5) * 0.22,
+      vRot: (Math.random() - 0.5) * 0.24,
       color: confettiPalette[i % confettiPalette.length],
-      alpha: 0.92
+      alpha: 0.95
     };
   });
+
+  const stickerCount = 14;
+  const stickerPieces = Array.from({ length: stickerCount }, (_, i) => {
+    const angle = (i / stickerCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.35;
+    const speed = 2.2 + Math.random() * 3.4;
+    const size = 24 + Math.random() * 10;
+    return {
+      kind: "sticker",
+      img: onePieceStickerImages[i % onePieceStickerImages.length],
+      x: cx + (Math.random() - 0.5) * 24,
+      y: cy + (Math.random() - 0.5) * 24,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2.2,
+      size,
+      rot: (Math.random() - 0.5) * 0.6,
+      vRot: (Math.random() - 0.5) * 0.14,
+      alpha: 0.98
+    };
+  });
+
+  confettiPieces = [...colorPieces, ...stickerPieces];
 
   if(confettiFrameId){
     window.cancelAnimationFrame(confettiFrameId);
@@ -968,10 +928,10 @@ function launchLightConfetti(){
       const p = confettiPieces[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.085;
-      p.vx *= 0.985;
+      p.vy += p.kind === "sticker" ? 0.068 : 0.085;
+      p.vx *= 0.986;
       p.rot += p.vRot;
-      p.alpha -= 0.011;
+      p.alpha -= p.kind === "sticker" ? 0.0085 : 0.011;
 
       if(p.alpha > 0.02){
         alive++;
@@ -979,8 +939,21 @@ function launchLightConfetti(){
         ctx.globalAlpha = Math.max(0, p.alpha);
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+
+        if(p.kind === "sticker" && p.img && p.img.complete){
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size * 0.52, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(255, 252, 242, 0.92)";
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = "rgba(240, 198, 108, 0.85)";
+          ctx.stroke();
+          ctx.drawImage(p.img, -p.size / 2, -p.size / 2, p.size, p.size);
+        }else{
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        }
+
         ctx.restore();
       }
     }
@@ -1059,8 +1032,6 @@ function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, sweat
   const winnerEl = document.getElementById("surpriseWinner");
   const metaEl = document.getElementById("surpriseMeta");
 
-  pickSmallOnePieceWinks();
-
   const ballObj = balls.find(b => b.index === recipientIndex);
   const shellColor = ballObj ? ballObj.color : ballPalette[recipientIndex % ballPalette.length];
 
@@ -1086,7 +1057,7 @@ function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, sweat
       surpriseTimer = setTimeout(() => {
         pod.classList.add("open");
         stage.classList.add("flash");
-        launchLightConfetti();
+        launchCelebrationConfetti();
         glintTimer = setTimeout(() => {
           stage.classList.remove("flash");
         }, 620);
