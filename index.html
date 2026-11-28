@@ -286,8 +286,8 @@ select:disabled{opacity:.65}
 .surprise-pod{
   position:relative;
   z-index:123;
-  width:min(88vw, 326px);
-  height:min(88vw, 326px);
+  width:min(90vw, 340px);
+  min-height:310px;
   display:grid;
   place-items:center;
   transform:translateY(90px) scale(0.24);
@@ -301,9 +301,9 @@ select:disabled{opacity:.65}
 .surprise-core{
   position:relative;
   z-index:2;
-  width:92%;
-  min-height:190px;
-  padding:18px 16px;
+  width:94%;
+  min-height:196px;
+  padding:16px 14px;
   border-radius:24px;
   background:linear-gradient(155deg, rgba(16, 54, 82, 0.96), rgba(14, 42, 64, 0.98));
   border:3px solid var(--gold);
@@ -322,35 +322,50 @@ select:disabled{opacity:.65}
   transform:scale(1);
   opacity:1;
 }
-.op-wink{
+
+/* Guiños pequeños de One Piece al abrir la bola */
+.op-winks-row{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:5px;
+  margin-bottom:2px;
+  max-width:100%;
+}
+.op-mini-wink{
   display:inline-flex;
   align-items:center;
-  gap:7px;
-  padding:4px 10px;
+  gap:4px;
+  padding:2px 7px;
   border-radius:999px;
-  background:rgba(255, 255, 255, 0.1);
-  border:1px solid rgba(240, 198, 108, 0.45);
-  margin-bottom:2px;
-  transform:scale(0.8);
+  background:rgba(255, 255, 255, 0.09);
+  border:1px solid rgba(240, 198, 108, 0.42);
+  transform:scale(0.75) translateY(4px);
   opacity:0;
-  transition:transform 0.4s cubic-bezier(0.2, 1.4, 0.35, 1) 0.36s, opacity 0.35s ease 0.34s;
+  transition:transform 0.35s cubic-bezier(0.2, 1.4, 0.35, 1), opacity 0.3s ease;
 }
-.surprise-pod.open .op-wink{
-  transform:scale(1);
+.surprise-pod.open .op-mini-wink{
+  transform:scale(1) translateY(0);
   opacity:1;
 }
-.op-wink svg{
-  width:30px;
-  height:30px;
+.surprise-pod.open .op-mini-wink:nth-child(1){transition-delay:0.32s}
+.surprise-pod.open .op-mini-wink:nth-child(2){transition-delay:0.39s}
+.surprise-pod.open .op-mini-wink:nth-child(3){transition-delay:0.46s}
+.op-mini-wink svg{
+  width:19px;
+  height:19px;
   flex-shrink:0;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,0.45));
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.45));
 }
-.op-wink-text{
-  font-size:0.74rem;
-  font-weight:800;
-  letter-spacing:0.04em;
+.op-mini-text{
+  font-size:0.65rem;
+  font-weight:700;
+  letter-spacing:0.02em;
   color:#ffe9a8;
+  line-height:1.1;
+  white-space:nowrap;
 }
+
 .surprise-tag{
   font-size:0.72rem;
   font-weight:800;
@@ -409,11 +424,11 @@ select:disabled{opacity:.65}
   transform:translateY(0) rotate(0deg);
 }
 .surprise-pod.open .shell-top{
-  transform:translateY(-86px) rotate(-14deg);
+  transform:translateY(-92px) rotate(-14deg);
   opacity:0;
 }
 .surprise-pod.open .shell-bottom{
-  transform:translateY(86px) rotate(14deg);
+  transform:translateY(92px) rotate(14deg);
   opacity:0;
 }
 
@@ -507,6 +522,8 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 @media(max-width:430px){
   main{padding:14px 10px 68px}
   .panel{border-radius:22px}
+  .op-mini-wink svg{width:16px;height:16px}
+  .op-mini-text{font-size:0.6rem}
 }
 </style>
 </head>
@@ -568,7 +585,7 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
  <div class="surprise-pod" id="surprisePod">
   <div class="shell-half shell-top" id="shellTop"></div>
   <div class="surprise-core">
-   <div class="op-wink" id="opWink"></div>
+   <div class="op-winks-row" id="opWinksRow"></div>
    <div class="surprise-tag">🎁 Tu regalo es para</div>
    <div class="surprise-winner" id="surpriseWinner"></div>
    <div class="surprise-meta" id="surpriseMeta"></div>
@@ -615,10 +632,10 @@ const musicBtn = document.getElementById("toggleMusic");
 let soundMuted = false;
 let audioCtx = null;
 
-/* Guiños de One Piece al azar al abrir la cápsula */
+/* Guiños pequeños de One Piece al abrir la bola */
 const onePieceWinks = [
   {
-    caption: "¡Seré el Rey de los Piratas!",
+    caption: "Rey Pirata",
     svg: `<svg viewBox="0 0 64 64" fill="none">
       <ellipse cx="32" cy="40" rx="26" ry="10" fill="#f3c64f" stroke="#3d2314" stroke-width="3"/>
       <path d="M13 38C13 21 21 14 32 14C43 14 51 21 51 38" fill="#f6cf62" stroke="#3d2314" stroke-width="3"/>
@@ -627,7 +644,7 @@ const onePieceWinks = [
     </svg>`
   },
   {
-    caption: "¡Santoryu! Rumbo al Grand Line",
+    caption: "Santoryu",
     svg: `<svg viewBox="0 0 64 64" fill="none">
       <path d="M18 48L44 12" stroke="#b8c4ce" stroke-width="3" stroke-linecap="round"/>
       <path d="M22 44L49 23" stroke="#b8c4ce" stroke-width="3" stroke-linecap="round"/>
@@ -642,7 +659,7 @@ const onePieceWinks = [
     </svg>`
   },
   {
-    caption: "¡Que arda la suerte como Ace!",
+    caption: "Mera Mera",
     svg: `<svg viewBox="0 0 64 64" fill="none">
       <ellipse cx="32" cy="40" rx="25" ry="9" fill="#ef7838" stroke="#2f1b12" stroke-width="3"/>
       <path d="M15 39L19 17C20 14 26 16 32 16C38 16 44 14 45 17L49 39" fill="#f48444" stroke="#2f1b12" stroke-width="3"/>
@@ -656,7 +673,7 @@ const onePieceWinks = [
     </svg>`
   },
   {
-    caption: "¡SUUUUPERRRR regalo!",
+    caption: "SUUUPERRR!",
     svg: `<svg viewBox="0 0 64 64" fill="none">
       <rect x="18" y="16" width="28" height="24" rx="3" fill="#42b4d6" stroke="#1b2631" stroke-width="3"/>
       <path d="M32 19L34.5 25L41 25.5L36 29.8L37.5 36L32 32.5L26.5 36L28 29.8L23 25.5L29.5 25L32 19Z" fill="#2b4c9e" stroke="#1b2631" stroke-width="1.8"/>
@@ -668,7 +685,7 @@ const onePieceWinks = [
     </svg>`
   },
   {
-    caption: "¡No es que me ponga feliz ni nada!",
+    caption: "Chopper",
     svg: `<svg viewBox="0 0 64 64" fill="none">
       <path d="M16 14C11 14 10 22 15 25L20 27" stroke="#5b3a24" stroke-width="3.5" stroke-linecap="round"/>
       <path d="M48 14C53 14 54 22 49 25L44 27" stroke="#5b3a24" stroke-width="3.5" stroke-linecap="round"/>
@@ -678,7 +695,7 @@ const onePieceWinks = [
     </svg>`
   },
   {
-    caption: "¡Fleur! ¡Flor de sorpresa!",
+    caption: "Fleur",
     svg: `<svg viewBox="0 0 64 64" fill="none">
       <path d="M32 22C34 16 34 11 32 9C30 11 30 16 32 22Z" fill="#f7b2c4" stroke="#2d2026" stroke-width="2"/>
       <path d="M27 24C21 20 17 20 16 23C18 25 22 26 27 24Z" fill="#f7b2c4" stroke="#2d2026" stroke-width="2"/>
@@ -691,11 +708,14 @@ const onePieceWinks = [
   }
 ];
 
-function pickRandomOnePieceWink(){
-  const winkEl = document.getElementById("opWink");
-  if(!winkEl || !onePieceWinks.length) return;
-  const pick = onePieceWinks[Math.floor(Math.random() * onePieceWinks.length)];
-  winkEl.innerHTML = `${pick.svg}<span class="op-wink-text">${esc(pick.caption)}</span>`;
+function pickSmallOnePieceWinks(){
+  const rowEl = document.getElementById("opWinksRow");
+  if(!rowEl || !onePieceWinks.length) return;
+  const shuffled = [...onePieceWinks].sort(() => Math.random() - 0.5);
+  const picks = shuffled.slice(0, 3);
+  rowEl.innerHTML = picks
+    .map(w => `<span class="op-mini-wink">${w.svg}<span class="op-mini-text">${esc(w.caption)}</span></span>`)
+    .join("");
 }
 
 function getAudioContext(){
@@ -1039,7 +1059,7 @@ function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, sweat
   const winnerEl = document.getElementById("surpriseWinner");
   const metaEl = document.getElementById("surpriseMeta");
 
-  pickRandomOnePieceWink();
+  pickSmallOnePieceWinks();
 
   const ballObj = balls.find(b => b.index === recipientIndex);
   const shellColor = ballObj ? ballObj.color : ballPalette[recipientIndex % ballPalette.length];
