@@ -104,11 +104,11 @@ h1{
   font-weight:700;
 }
 
-/* Medidor de avance sin borde: olas limpias + Santa en su trineo con renos */
+/* Medidor de nieve sin mar ni borde: Santa en su trineo con renos */
 .sea-progress-wrap{
   position:relative;
   height:56px;
-  background:linear-gradient(180deg, rgba(8, 34, 56, 0.25) 0%, rgba(10, 48, 76, 0.52) 100%);
+  background:transparent;
   border:none;
   border-radius:16px;
   overflow:hidden;
@@ -289,8 +289,8 @@ select:disabled{opacity:.65}
 .surprise-pod{
   position:relative;
   z-index:123;
-  width:min(86vw, 310px);
-  height:min(86vw, 310px);
+  width:min(88vw, 330px);
+  height:min(88vw, 330px);
   display:grid;
   place-items:center;
   transform:translateY(90px) scale(0.24);
@@ -304,8 +304,8 @@ select:disabled{opacity:.65}
 .surprise-core{
   position:relative;
   z-index:2;
-  width:90%;
-  min-height:165px;
+  width:94%;
+  min-height:175px;
   padding:20px 18px;
   border-radius:24px;
   background:linear-gradient(155deg, rgba(16, 54, 82, 0.96), rgba(14, 42, 64, 0.98));
@@ -332,9 +332,16 @@ select:disabled{opacity:.65}
   text-transform:uppercase;
   color:#f7dfa0;
 }
+.surprise-winner-row{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
 .surprise-winner{
   font-family:'Baloo 2',cursive,sans-serif;
-  font-size:clamp(1.65rem, 6vw, 2.25rem);
+  font-size:clamp(1.6rem, 5.8vw, 2.2rem);
   font-weight:800;
   line-height:1.1;
   color:#fde047;
@@ -397,6 +404,14 @@ select:disabled{opacity:.65}
   padding:8px 6px;
   color:#f4f9fc;
 }
+.result-name-line{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:4px 0;
+}
 .result .name{
   font-family:'Baloo 2',cursive,sans-serif;
   font-size:clamp(1.9rem,5.2vw,2.7rem);
@@ -404,7 +419,28 @@ select:disabled{opacity:.65}
   line-height:1.1;
   color:#ffd66b;
   text-shadow:0 2px 10px rgba(0,0,0,0.55);
-  margin:4px 0;
+}
+.op-sticker-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 9px 3px 4px;
+  border-radius:999px;
+  background:rgba(255, 250, 236, 0.94);
+  border:2px solid var(--gold);
+  box-shadow:0 4px 10px rgba(0,0,0,0.35);
+  vertical-align:middle;
+}
+.op-sticker-canvas{
+  width:28px;
+  height:28px;
+  display:block;
+}
+.op-sticker-caption{
+  font-size:0.78rem;
+  font-weight:800;
+  color:#183228;
+  line-height:1.1;
 }
 .small{
   font-size:.92rem;
@@ -546,7 +582,10 @@ button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   <div class="shell-half shell-top" id="shellTop"></div>
   <div class="surprise-core">
    <div class="surprise-tag">🎁 Tu regalo es para</div>
-   <div class="surprise-winner" id="surpriseWinner"></div>
+   <div class="surprise-winner-row">
+    <span class="surprise-winner" id="surpriseWinner"></span>
+    <span id="surpriseStickerMount"></span>
+   </div>
    <div class="surprise-meta" id="surpriseMeta"></div>
    <button type="button" class="surprise-close" id="closeSurprise">Listo</button>
   </div>
@@ -579,12 +618,12 @@ let animFrameId = null;
 let surpriseTimer = null;
 let glintTimer = null;
 
-/* Estado del medidor con Santa Claus, su trineo y renos */
+/* Estado del medidor con Santa Claus, su trineo y renos sobre nieve */
 let targetProgressRatio = 0;
 let currentSleighRatio = 0;
 let seaFrameId = null;
 
-/* Nieve constante con acumulación en la parte baja y confeti de celebración */
+/* Nieve constante con acumulación en la parte baja y confeti festivo */
 let snowflakes = [];
 let snowPile = [];
 let snowFrameId = null;
@@ -596,285 +635,240 @@ const musicBtn = document.getElementById("toggleMusic");
 let soundMuted = false;
 let audioCtx = null;
 
-/* Tipos de guiños de One Piece dibujados directamente en Canvas */
-const onePieceWinkKinds = [
-  "luffyHat",
-  "zoroSwords",
-  "aceHat",
-  "franky",
-  "chopper",
-  "robinSakura",
-  "fruitFire",
-  "fruitPurple",
-  "doflamingo",
-  "blackbeard",
-  "bigmom",
-  "kaido",
-  "oden",
-  "yamato",
-  "wanoFlower"
+/* Catálogo de stickers de One Piece para colocar junto a los nombres en resultados */
+const onePieceStickers = [
+  { key: "luffyHat", label: "Sombrero de paja de Luffy" },
+  { key: "zoroSwords", label: "Espadas de Zoro" },
+  { key: "namiTangerines", label: "Mandarinas de Nami" },
+  { key: "aceHat", label: "Sombrero de Ace" },
+  { key: "chopperHat", label: "Gorro de Chopper" },
+  { key: "frankyStar", label: "Super de Franky" },
+  { key: "robinFlower", label: "Flor de Robin" },
+  { key: "doflamingoGlasses", label: "Lentes de Doflamingo" },
+  { key: "lawHat", label: "Gorro de Law" },
+  { key: "yamatoHorns", label: "Cuernos de Yamato" }
 ];
 
-function pickSmallMixedStickerSize(){
-  const roll = Math.random();
-  if(roll < 0.45) return 16 + Math.random() * 5;
-  if(roll < 0.82) return 22 + Math.random() * 6;
-  return 29 + Math.random() * 6;
+function getStickerForRecipient(recipientIndex, recipientName){
+  const idx = Number.isInteger(recipientIndex) && recipientIndex >= 0
+    ? recipientIndex
+    : String(recipientName || "").split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return onePieceStickers[idx % onePieceStickers.length];
 }
 
-function drawOnePieceConfettiItem(ctx, p){
-  const s = p.size;
-  const h = s * 0.5;
-
-  ctx.beginPath();
-  ctx.arc(0, 0, s * 0.54, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(255, 252, 242, 0.94)";
-  ctx.fill();
-  ctx.lineWidth = Math.max(1.2, s * 0.05);
-  ctx.strokeStyle = "rgba(240, 198, 108, 0.9)";
-  ctx.stroke();
-
+function drawOnePieceStickerArt(ctx, kind, size){
+  const r = size * 0.44;
   ctx.save();
+  ctx.translate(size / 2, size / 2);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
-  switch(p.kind){
+  switch(kind){
     case "luffyHat": {
-      ctx.fillStyle = "#f3c64f";
-      ctx.strokeStyle = "#2f1a0f";
-      ctx.lineWidth = s * 0.055;
+      ctx.fillStyle = "#f4c542";
+      ctx.strokeStyle = "#3b1e0c";
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.ellipse(0, h * 0.16, h * 0.78, h * 0.28, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, r * 0.22, r * 0.92, r * 0.34, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = "#f6cf62";
+      ctx.fillStyle = "#f7d15c";
       ctx.beginPath();
-      ctx.arc(0, h * 0.08, h * 0.46, Math.PI, 0);
+      ctx.arc(0, r * 0.1, r * 0.56, Math.PI, 0);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = "#d92b3a";
-      ctx.fillRect(-h * 0.45, -h * 0.04, h * 0.9, h * 0.16);
+      ctx.fillStyle = "#dc2626";
+      ctx.fillRect(-r * 0.54, -r * 0.05, r * 1.08, r * 0.2);
       break;
     }
     case "zoroSwords": {
-      ctx.strokeStyle = "#cbd5e1";
-      ctx.lineWidth = s * 0.05;
-      for(let k = -1; k <= 1; k++){
-        ctx.beginPath();
-        ctx.moveTo(-h * 0.55, k * h * 0.24);
-        ctx.lineTo(h * 0.55, -k * h * 0.24);
-        ctx.stroke();
-      }
-      ctx.fillStyle = "#f0c66c";
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.arc(h * 0.22, 0, h * 0.14, 0, Math.PI * 2);
+      ctx.moveTo(-r * 0.72, -r * 0.52);
+      ctx.lineTo(r * 0.72, r * 0.52);
+      ctx.moveTo(-r * 0.72, r * 0.52);
+      ctx.lineTo(r * 0.72, -r * 0.52);
+      ctx.moveTo(-r * 0.78, 0);
+      ctx.lineTo(r * 0.78, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = "#eab308";
+      ctx.beginPath();
+      ctx.arc(r * 0.32, 0, r * 0.16, 0, Math.PI * 2);
       ctx.fill();
+      break;
+    }
+    case "namiTangerines": {
+      const drawMandarin = (mx, my, mr) => {
+        ctx.fillStyle = "#f97316";
+        ctx.strokeStyle = "#7c2d12";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(mx, my, mr, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#16a34a";
+        ctx.beginPath();
+        ctx.ellipse(mx + mr * 0.2, my - mr * 0.95, mr * 0.45, mr * 0.2, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      drawMandarin(-r * 0.32, r * 0.16, r * 0.48);
+      drawMandarin(r * 0.34, -r * 0.12, r * 0.44);
       break;
     }
     case "aceHat": {
-      ctx.fillStyle = "#ef7838";
+      ctx.fillStyle = "#f97316";
       ctx.strokeStyle = "#2c170f";
-      ctx.lineWidth = s * 0.055;
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.ellipse(0, h * 0.14, h * 0.75, h * 0.26, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, r * 0.22, r * 0.88, r * 0.3, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = "#f48444";
+      ctx.fillStyle = "#fb923c";
       ctx.beginPath();
-      ctx.moveTo(-h * 0.42, h * 0.12);
-      ctx.lineTo(-h * 0.34, -h * 0.38);
-      ctx.lineTo(h * 0.34, -h * 0.38);
-      ctx.lineTo(h * 0.42, h * 0.12);
+      ctx.moveTo(-r * 0.48, r * 0.18);
+      ctx.lineTo(-r * 0.38, -r * 0.48);
+      ctx.lineTo(r * 0.38, -r * 0.48);
+      ctx.lineTo(r * 0.48, r * 0.18);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "#38bdf8";
       ctx.beginPath();
-      ctx.arc(-h * 0.18, 0, h * 0.1, 0, Math.PI * 2);
-      ctx.arc(h * 0.18, 0, h * 0.1, 0, Math.PI * 2);
+      ctx.arc(-r * 0.2, -r * 0.05, r * 0.12, 0, Math.PI * 2);
+      ctx.arc(r * 0.2, -r * 0.05, r * 0.12, 0, Math.PI * 2);
       ctx.fill();
       break;
     }
-    case "franky": {
-      ctx.fillStyle = "#42b4d6";
-      ctx.strokeStyle = "#18222c";
-      ctx.lineWidth = s * 0.055;
-      ctx.fillRect(-h * 0.42, -h * 0.42, h * 0.84, h * 0.84);
-      ctx.strokeRect(-h * 0.42, -h * 0.42, h * 0.84, h * 0.84);
-      ctx.fillStyle = "#2563eb";
-      ctx.beginPath();
-      ctx.arc(0, 0, h * 0.2, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    }
-    case "chopper": {
+    case "chopperHat": {
       ctx.fillStyle = "#38bdf8";
       ctx.strokeStyle = "#1e293b";
-      ctx.lineWidth = s * 0.055;
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.arc(0, h * 0.05, h * 0.54, Math.PI, 0);
-      ctx.lineTo(h * 0.65, h * 0.38);
-      ctx.lineTo(-h * 0.65, h * 0.38);
+      ctx.arc(0, r * 0.12, r * 0.68, Math.PI, 0);
+      ctx.lineTo(r * 0.8, r * 0.48);
+      ctx.lineTo(-r * 0.8, r * 0.48);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = "#fb7185";
       ctx.beginPath();
-      ctx.arc(0, -h * 0.06, h * 0.22, 0, Math.PI * 2);
+      ctx.arc(0, -r * 0.05, r * 0.26, 0, Math.PI * 2);
       ctx.fill();
       break;
     }
-    case "robinSakura":
-    case "wanoFlower": {
-      const petalFill = p.kind === "wanoFlower" ? "#fbcfe8" : "#f9a8d4";
-      ctx.fillStyle = petalFill;
-      ctx.strokeStyle = "#3b1d2a";
-      ctx.lineWidth = s * 0.045;
+    case "frankyStar": {
+      ctx.fillStyle = "#38bdf8";
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 1.4;
+      ctx.fillRect(-r * 0.56, -r * 0.56, r * 1.12, r * 1.12);
+      ctx.strokeRect(-r * 0.56, -r * 0.56, r * 1.12, r * 1.12);
+      ctx.fillStyle = "#facc15";
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 0.26, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case "robinFlower": {
+      ctx.fillStyle = "#f472b6";
+      ctx.strokeStyle = "#831843";
+      ctx.lineWidth = 1.1;
       for(let k = 0; k < 5; k++){
         const a = (k / 5) * Math.PI * 2 - Math.PI / 2;
         ctx.beginPath();
-        ctx.arc(Math.cos(a) * h * 0.34, Math.sin(a) * h * 0.34, h * 0.24, 0, Math.PI * 2);
+        ctx.arc(Math.cos(a) * r * 0.42, Math.sin(a) * r * 0.42, r * 0.28, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
       }
-      ctx.fillStyle = "#fb7185";
+      ctx.fillStyle = "#fde047";
       ctx.beginPath();
-      ctx.arc(0, 0, h * 0.14, 0, Math.PI * 2);
+      ctx.arc(0, 0, r * 0.18, 0, Math.PI * 2);
       ctx.fill();
       break;
     }
-    case "fruitFire":
-    case "fruitPurple": {
-      const fruitFill = p.kind === "fruitFire" ? "#f97316" : "#7e22ce";
-      const swirlColor = p.kind === "fruitFire" ? "#fde047" : "#d8b4fe";
-      ctx.strokeStyle = "#16a34a";
-      ctx.lineWidth = s * 0.06;
+    case "doflamingoGlasses": {
+      ctx.fillStyle = "#ec4899";
+      ctx.strokeStyle = "#9d174d";
+      ctx.lineWidth = 1.3;
       ctx.beginPath();
-      ctx.moveTo(0, -h * 0.52);
-      ctx.quadraticCurveTo(h * 0.25, -h * 0.8, h * 0.42, -h * 0.62);
-      ctx.stroke();
-
-      ctx.fillStyle = fruitFill;
-      ctx.strokeStyle = "#1e102e";
-      ctx.lineWidth = s * 0.055;
-      ctx.beginPath();
-      ctx.arc(0, h * 0.05, h * 0.54, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.strokeStyle = swirlColor;
-      ctx.lineWidth = s * 0.045;
-      ctx.beginPath();
-      ctx.arc(-h * 0.15, h * 0.05, h * 0.16, 0, Math.PI * 1.4);
-      ctx.moveTo(h * 0.18, -h * 0.1);
-      ctx.lineTo(h * 0.22, h * 0.22);
-      ctx.stroke();
-      break;
-    }
-    case "doflamingo": {
-      ctx.fillStyle = "#f472b6";
-      ctx.strokeStyle = "#be185d";
-      ctx.lineWidth = s * 0.055;
-      ctx.beginPath();
-      ctx.moveTo(-h * 0.72, -h * 0.25);
-      ctx.lineTo(h * 0.72, -h * 0.25);
-      ctx.lineTo(h * 0.5, h * 0.25);
-      ctx.lineTo(h * 0.12, h * 0.25);
-      ctx.lineTo(0, -h * 0.05);
-      ctx.lineTo(-h * 0.12, h * 0.25);
-      ctx.lineTo(-h * 0.5, h * 0.25);
+      ctx.moveTo(-r * 0.88, -r * 0.25);
+      ctx.lineTo(r * 0.88, -r * 0.25);
+      ctx.lineTo(r * 0.62, r * 0.28);
+      ctx.lineTo(r * 0.14, r * 0.28);
+      ctx.lineTo(0, -r * 0.05);
+      ctx.lineTo(-r * 0.14, r * 0.28);
+      ctx.lineTo(-r * 0.62, r * 0.28);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
       break;
     }
-    case "blackbeard": {
-      ctx.fillStyle = "#1e1b24";
-      ctx.strokeStyle = "#f59e0b";
-      ctx.lineWidth = s * 0.05;
+    case "lawHat": {
+      ctx.fillStyle = "#f8fafc";
+      ctx.strokeStyle = "#1e293b";
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
-      ctx.arc(0, 0, h * 0.54, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(-h * 0.22, -h * 0.18);
-      ctx.lineTo(h * 0.22, h * 0.22);
-      ctx.moveTo(h * 0.22, -h * 0.18);
-      ctx.lineTo(-h * 0.22, h * 0.22);
-      ctx.stroke();
-      break;
-    }
-    case "bigmom": {
-      ctx.fillStyle = "#f472b6";
-      ctx.strokeStyle = "#3b0d24";
-      ctx.lineWidth = s * 0.055;
-      ctx.beginPath();
-      ctx.arc(0, h * 0.08, h * 0.56, Math.PI, 0);
+      ctx.arc(0, r * 0.15, r * 0.68, Math.PI, 0);
+      ctx.lineTo(r * 0.82, r * 0.44);
+      ctx.lineTo(-r * 0.82, r * 0.44);
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = "#fbbf24";
+      ctx.fillStyle = "#facc15";
       ctx.beginPath();
-      ctx.arc(0, -h * 0.46, h * 0.16, 0, Math.PI * 2);
+      ctx.arc(0, -r * 0.12, r * 0.24, 0, Math.PI * 2);
       ctx.fill();
       break;
     }
-    case "kaido":
-    case "yamato": {
-      const leftHorn = p.kind === "yamato" ? "#38bdf8" : "#e2e8f0";
-      const rightHorn = p.kind === "yamato" ? "#f8fafc" : "#e2e8f0";
+    case "yamatoHorns":
+    default: {
       ctx.strokeStyle = "#1e293b";
-      ctx.lineWidth = s * 0.05;
-
-      ctx.fillStyle = leftHorn;
+      ctx.lineWidth = 1.3;
+      ctx.fillStyle = "#38bdf8";
       ctx.beginPath();
-      ctx.moveTo(-h * 0.22, h * 0.1);
-      ctx.quadraticCurveTo(-h * 0.7, -h * 0.2, -h * 0.55, -h * 0.65);
-      ctx.quadraticCurveTo(-h * 0.32, -h * 0.35, -h * 0.12, h * 0.1);
+      ctx.moveTo(-r * 0.24, r * 0.2);
+      ctx.quadraticCurveTo(-r * 0.85, -r * 0.2, -r * 0.65, -r * 0.78);
+      ctx.quadraticCurveTo(-r * 0.35, -r * 0.4, -r * 0.12, r * 0.2);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = rightHorn;
+      ctx.fillStyle = "#f43f5e";
       ctx.beginPath();
-      ctx.moveTo(h * 0.22, h * 0.1);
-      ctx.quadraticCurveTo(h * 0.7, -h * 0.2, h * 0.55, -h * 0.65);
-      ctx.quadraticCurveTo(h * 0.32, -h * 0.35, h * 0.12, h * 0.1);
+      ctx.moveTo(r * 0.24, r * 0.2);
+      ctx.quadraticCurveTo(r * 0.85, -r * 0.2, r * 0.65, -r * 0.78);
+      ctx.quadraticCurveTo(r * 0.35, -r * 0.4, r * 0.12, r * 0.2);
       ctx.fill();
       ctx.stroke();
-
-      ctx.fillStyle = "#fbbf24";
-      ctx.beginPath();
-      ctx.arc(0, h * 0.25, h * 0.22, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      break;
-    }
-    case "oden": {
-      ctx.strokeStyle = "#1e293b";
-      ctx.lineWidth = s * 0.07;
-      ctx.beginPath();
-      ctx.moveTo(-h * 0.55, -h * 0.55);
-      ctx.lineTo(h * 0.55, h * 0.55);
-      ctx.moveTo(h * 0.55, -h * 0.55);
-      ctx.lineTo(-h * 0.55, h * 0.55);
-      ctx.stroke();
-
-      ctx.fillStyle = "#f59e0b";
-      ctx.beginPath();
-      ctx.arc(0, 0, h * 0.22, 0, Math.PI * 2);
-      ctx.fill();
       break;
     }
   }
   ctx.restore();
+}
+
+function buildStickerBadgeHTML(recipientIndex, recipientName){
+  const sticker = getStickerForRecipient(recipientIndex, recipientName);
+  const canvasId = `opBadge_${sticker.key}_${Math.random().toString(36).slice(2, 7)}`;
+  setTimeout(() => {
+    const el = document.getElementById(canvasId);
+    if(!el) return;
+    const ctx = el.getContext("2d");
+    ctx.clearRect(0, 0, el.width, el.height);
+    drawOnePieceStickerArt(ctx, sticker.key, el.width);
+  }, 0);
+
+  return `<span class="op-sticker-badge" title="${esc(sticker.label)}">
+    <canvas id="${canvasId}" class="op-sticker-canvas" width="28" height="28" aria-hidden="true"></canvas>
+    <span class="op-sticker-caption">${esc(sticker.label)}</span>
+  </span>`;
 }
 
 /* Dibujo de Santa Claus en su trineo tirado por dos renos */
@@ -888,7 +882,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
 
   const legSwing = Math.sin(gallopPhase) * 2.2;
 
-  // Riendas conectando el trineo con los renos (avanzando hacia la derecha)
   ctx.strokeStyle = "#fde68a";
   ctx.lineWidth = 0.85;
   ctx.beginPath();
@@ -898,8 +891,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.lineTo(25, -6.5 - legSwing * 0.25);
   ctx.stroke();
 
-  // --- TRINEO DE SANTA (izquierda) ---
-  // Patín inferior dorado
   ctx.strokeStyle = "#fbbf24";
   ctx.lineWidth = 1.6;
   ctx.beginPath();
@@ -908,7 +899,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.quadraticCurveTo(-4, 4.5, -3, 1.5);
   ctx.stroke();
 
-  // Soportes del patín
   ctx.beginPath();
   ctx.moveTo(-18, 1);
   ctx.lineTo(-18, 4.5);
@@ -916,7 +906,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.lineTo(-10, 4.5);
   ctx.stroke();
 
-  // Saco de regalos detrás de Santa
   ctx.fillStyle = "#b45309";
   ctx.strokeStyle = "#451a03";
   ctx.lineWidth = 0.9;
@@ -925,7 +914,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.fill();
   ctx.stroke();
 
-  // Regalo verde con listón dorado
   ctx.fillStyle = "#16a34a";
   ctx.fillRect(-15, -6, 4.2, 4.2);
   ctx.strokeStyle = "#facc15";
@@ -935,7 +923,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.lineTo(-12.9, -1.8);
   ctx.stroke();
 
-  // Cuerpo del trineo rojo con ribete dorado
   ctx.fillStyle = "#dc2626";
   ctx.strokeStyle = "#fef08a";
   ctx.lineWidth = 1;
@@ -949,15 +936,12 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.fill();
   ctx.stroke();
 
-  // Santa Claus sentado en el trineo
-  // Abrigo rojo
   ctx.fillStyle = "#ef4444";
   ctx.beginPath();
   ctx.arc(-11.5, -5.5, 3.6, Math.PI * 0.9, Math.PI * 2.1);
   ctx.closePath();
   ctx.fill();
 
-  // Cara y barba blanca
   ctx.fillStyle = "#fde68a";
   ctx.beginPath();
   ctx.arc(-10.5, -9.8, 2.5, 0, Math.PI * 2);
@@ -968,7 +952,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.arc(-9.8, -8.8, 2.1, 0, Math.PI * 0.95);
   ctx.fill();
 
-  // Gorro rojo con pompón blanco
   ctx.fillStyle = "#dc2626";
   ctx.beginPath();
   ctx.moveTo(-13.2, -10.8);
@@ -982,12 +965,10 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
   ctx.arc(-10.2, -15.6, 1.3, 0, Math.PI * 2);
   ctx.fill();
 
-  // --- DOS RENOS GUIANDO EL TRINEO (derecha) ---
   function drawSingleReindeer(rx, ry, swing, isRudolph){
     ctx.save();
     ctx.translate(rx, ry);
 
-    // Patas animadas
     ctx.strokeStyle = "#78350f";
     ctx.lineWidth = 1.4;
     ctx.beginPath();
@@ -997,19 +978,16 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
     ctx.lineTo(3.2 + swing * 0.6, 5.2);
     ctx.stroke();
 
-    // Cuerpo del reno
     ctx.fillStyle = "#92400e";
     ctx.beginPath();
     ctx.ellipse(0, 0, 4.4, 2.3, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Cuello y cabeza mirando a la derecha
     ctx.fillStyle = "#92400e";
     ctx.beginPath();
     ctx.ellipse(4.4, -3.4, 2.5, 1.8, -0.25, 0, Math.PI * 2);
     ctx.fill();
 
-    // Cornamenta
     ctx.strokeStyle = "#fde68a";
     ctx.lineWidth = 1.1;
     ctx.beginPath();
@@ -1021,7 +999,6 @@ function drawSantaSleighAndReindeer(ctx, x, y, tiltAngle, gallopPhase){
     ctx.lineTo(5.6, -7.8);
     ctx.stroke();
 
-    // Nariz (roja brillante en el reno delantero)
     ctx.fillStyle = isRudolph ? "#ff2e4c" : "#1e1b24";
     ctx.beginPath();
     ctx.arc(6.8, -3.1, isRudolph ? 1.35 : 0.95, 0, Math.PI * 2);
@@ -1063,64 +1040,46 @@ function stepSeaProgress(){
 
   ctx.clearRect(0, 0, w, h);
 
-  const seaTopBase = h * 0.66;
+  const snowBaseY = h * 0.72;
   const fillWidth = Math.max(0, Math.min(w, w * currentSleighRatio));
 
-  // Franja recorrida con olas y espuma blanca
   if(fillWidth > 1){
     ctx.save();
     ctx.beginPath();
     ctx.moveTo(0, h);
-    const step = 8;
+    const step = 10;
     for(let x = 0; x <= fillWidth; x += step){
-      const wave = Math.sin(x * 0.042 + t * 1.35) * 2.2 + Math.cos(x * 0.022 - t) * 1.2;
-      ctx.lineTo(x, seaTopBase + wave);
+      const drift = Math.sin(x * 0.035 + t * 0.9) * 1.3;
+      ctx.lineTo(x, snowBaseY + drift);
     }
-    ctx.lineTo(fillWidth, seaTopBase + Math.sin(fillWidth * 0.042 + t * 1.35) * 2.2);
+    ctx.lineTo(fillWidth, snowBaseY + Math.sin(fillWidth * 0.035 + t * 0.9) * 1.3);
     ctx.lineTo(fillWidth, h);
     ctx.closePath();
 
-    const waterGrad = ctx.createLinearGradient(0, seaTopBase - 4, 0, h);
-    waterGrad.addColorStop(0, "#38bdf8");
-    waterGrad.addColorStop(0.55, "#0284c7");
-    waterGrad.addColorStop(1, "#0c4a6e");
-    ctx.fillStyle = waterGrad;
+    const snowGrad = ctx.createLinearGradient(0, snowBaseY - 3, 0, h);
+    snowGrad.addColorStop(0, "rgba(255, 255, 255, 0.92)");
+    snowGrad.addColorStop(1, "rgba(219, 238, 252, 0.72)");
+    ctx.fillStyle = snowGrad;
     ctx.fill();
-
-    ctx.beginPath();
-    for(let x = 0; x <= fillWidth; x += step){
-      const wave = Math.sin(x * 0.042 + t * 1.35) * 2.2 + Math.cos(x * 0.022 - t) * 1.2;
-      const wy = seaTopBase + wave;
-      if(x === 0) ctx.moveTo(x, wy);
-      else ctx.lineTo(x, wy);
-    }
-    ctx.strokeStyle = "rgba(240, 249, 255, 0.88)";
-    ctx.lineWidth = 2.2;
-    ctx.stroke();
     ctx.restore();
   }
 
-  // Olas sutiles en el tramo pendiente sin marco ni borde
   ctx.save();
+  ctx.setLineDash([4, 8]);
   ctx.beginPath();
-  for(let x = Math.floor(fillWidth); x <= w; x += 10){
-    const wave = Math.sin(x * 0.038 + t * 1.05) * 1.5;
-    const wy = seaTopBase + 3 + wave;
-    if(x === Math.floor(fillWidth)) ctx.moveTo(x, wy);
-    else ctx.lineTo(x, wy);
-  }
-  ctx.strokeStyle = "rgba(125, 211, 252, 0.34)";
+  ctx.moveTo(Math.floor(fillWidth), snowBaseY + 2);
+  ctx.lineTo(w, snowBaseY + 2);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
   ctx.lineWidth = 1.6;
   ctx.stroke();
   ctx.restore();
 
-  // Posición de Santa, su trineo y renos con margen para que no se corten
   const marginX = 36;
   const usableW = Math.max(20, w - marginX * 2);
   const sleighX = marginX + usableW * currentSleighRatio;
-  const sleighWave = Math.sin(sleighX * 0.042 + t * 1.35) * 2.2 + Math.cos(sleighX * 0.022 - t) * 1.2;
-  const sleighY = seaTopBase + sleighWave - 2;
-  const tilt = Math.cos(sleighX * 0.042 + t * 1.35) * 0.05;
+  const snowSurfaceY = snowBaseY + Math.sin(sleighX * 0.035 + t * 0.9) * 1.3;
+  const sleighY = snowSurfaceY - 2;
+  const tilt = Math.cos(sleighX * 0.035 + t * 0.9) * 0.035;
 
   drawSantaSleighAndReindeer(ctx, sleighX, sleighY, tilt, t * 2.6);
 
@@ -1339,6 +1298,7 @@ function initSnow(){
 
 const confettiPalette = ["#e11d48", "#10b981", "#fbbf24", "#38bdf8", "#f8fafc", "#f59e0b"];
 
+/* Confeti festivo limpio en las cápsulas (sin guiños de One Piece) */
 function launchCelebrationConfetti(){
   const canvas = document.getElementById("confettiCanvas");
   if(!canvas) return;
@@ -1348,45 +1308,22 @@ function launchCelebrationConfetti(){
   const cx = canvas.width / 2;
   const cy = canvas.height / 2;
 
-  const colorPieces = Array.from({ length: 44 }, (_, i) => {
-    const angle = (i / 44) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
-    const speed = 2.6 + Math.random() * 4.5;
+  confettiPieces = Array.from({ length: 76 }, (_, i) => {
+    const angle = (i / 76) * Math.PI * 2 + (Math.random() - 0.5) * 0.25;
+    const speed = 2.8 + Math.random() * 4.8;
     return {
-      isSticker: false,
       x: cx + (Math.random() - 0.5) * 28,
       y: cy + (Math.random() - 0.5) * 28,
       vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 2.1,
-      w: 5 + Math.random() * 4,
-      h: 3 + Math.random() * 3,
+      vy: Math.sin(angle) * speed - 2.2,
+      w: 5 + Math.random() * 5,
+      h: 3 + Math.random() * 3.5,
       rot: Math.random() * Math.PI * 2,
       vRot: (Math.random() - 0.5) * 0.24,
       color: confettiPalette[i % confettiPalette.length],
       alpha: 0.95
     };
   });
-
-  const stickerCount = 26;
-  const stickerPieces = Array.from({ length: stickerCount }, () => {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 2.0 + Math.random() * 4.0;
-    const size = pickSmallMixedStickerSize();
-    const kind = onePieceWinkKinds[Math.floor(Math.random() * onePieceWinkKinds.length)];
-    return {
-      isSticker: true,
-      kind,
-      x: cx + (Math.random() - 0.5) * 32,
-      y: cy + (Math.random() - 0.5) * 32,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 2.3,
-      size,
-      rot: (Math.random() - 0.5) * 0.75,
-      vRot: (Math.random() - 0.5) * 0.16,
-      alpha: 0.98
-    };
-  });
-
-  confettiPieces = [...colorPieces, ...stickerPieces];
 
   if(confettiFrameId){
     window.cancelAnimationFrame(confettiFrameId);
@@ -1402,10 +1339,10 @@ function launchCelebrationConfetti(){
       const p = confettiPieces[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += p.isSticker ? 0.068 : 0.085;
+      p.vy += 0.085;
       p.vx *= 0.986;
       p.rot += p.vRot;
-      p.alpha -= p.isSticker ? 0.0085 : 0.011;
+      p.alpha -= 0.011;
 
       if(p.alpha > 0.02){
         alive++;
@@ -1413,14 +1350,8 @@ function launchCelebrationConfetti(){
         ctx.globalAlpha = Math.max(0, p.alpha);
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
-
-        if(p.isSticker){
-          drawOnePieceConfettiItem(ctx, p);
-        }else{
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-        }
-
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
         ctx.restore();
       }
     }
@@ -1497,6 +1428,7 @@ function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, sweat
   const topHalf = document.getElementById("shellTop");
   const bottomHalf = document.getElementById("shellBottom");
   const winnerEl = document.getElementById("surpriseWinner");
+  const stickerMountEl = document.getElementById("surpriseStickerMount");
   const metaEl = document.getElementById("surpriseMeta");
 
   const ballObj = balls.find(b => b.index === recipientIndex);
@@ -1505,6 +1437,7 @@ function openSurpriseCapsule(recipientIndex, recipientName, recipientSize, sweat
   topHalf.style.setProperty("--shell-color", shellColor);
   bottomHalf.style.setProperty("--shell-color", shellColor);
   winnerEl.textContent = recipientName;
+  stickerMountEl.innerHTML = buildStickerBadgeHTML(recipientIndex, recipientName);
 
   const sizeLine = recipientSize ? `🎁 Talla ${recipientSize}` : "¡Sorpresa navideña!";
   const wishLine = sweaterWish
@@ -1779,7 +1712,10 @@ document.getElementById("spin").addEventListener("click",async()=>{
       document.getElementById("status").textContent="¡Tu participación quedó guardada!";
       document.getElementById("result").innerHTML=
         `<div class="small">🎉 <strong>${esc(getPersonName(giver))}</strong>, tu regalo es para:</div>
-         <div class="name">${esc(response.recipientName)}</div>
+         <div class="result-name-line">
+           <span class="name">${esc(response.recipientName)}</span>
+           ${buildStickerBadgeHTML(recipient, response.recipientName)}
+         </div>
          <div>🎁 Talla <strong>${esc(response.recipientSize)}</strong></div>
          ${sweaterWish?`<div class="small" style="margin-top:8px;padding:9px;border-radius:10px;background:rgba(240,198,108,0.22);border:1px solid rgba(240,198,108,0.55);color:#fff2c6">🎄 <strong>${esc(sweaterWish)}</strong>. Tenlo presente al elegir su regalo.</div>`:""}
          <div class="small" style="margin-top:6px;">Resultado registrado correctamente.</div>`;
